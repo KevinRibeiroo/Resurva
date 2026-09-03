@@ -9,24 +9,24 @@ public sealed class OptimizationSafetyValidatorTests
     [Fact]
     public void Safe_is_allowed()
     {
-        Assert.True(_validator.CanApply(new(Guid.NewGuid(), OptimizationSafetyLevel.Safe)));
+        Assert.True(_validator.CanApply(new OptimizationSuggestionModel(Guid.NewGuid(), OptimizationSafetyLevel.Safe)));
     }
 
     [Fact]
     public void Needs_confirmation_is_blocked_without_confirmation()
     {
-        Assert.False(_validator.CanApply(new(Guid.NewGuid(), OptimizationSafetyLevel.NeedsConfirmation)));
+        Assert.False(_validator.CanApply(new OptimizationSuggestionModel(Guid.NewGuid(), OptimizationSafetyLevel.NeedsConfirmation)));
     }
 
     [Fact]
     public void Needs_confirmation_is_allowed_after_confirmation()
     {
-        Assert.True(_validator.CanApply(new(Guid.NewGuid(), OptimizationSafetyLevel.NeedsConfirmation, true)));
+        Assert.True(_validator.CanApply(new OptimizationSuggestionModel(Guid.NewGuid(), OptimizationSafetyLevel.NeedsConfirmation, true)));
     }
 
     [Fact]
     public void Forbidden_is_always_blocked()
     {
-        Assert.False(_validator.CanApply(new(Guid.NewGuid(), OptimizationSafetyLevel.Forbidden, true)));
+        Assert.False(_validator.CanApply(new OptimizationSuggestionModel(Guid.NewGuid(), OptimizationSafetyLevel.Forbidden, true)));
     }
 }
