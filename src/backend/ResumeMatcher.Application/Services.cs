@@ -64,7 +64,8 @@ public sealed class AnalysisService(
     IResumeRepository resumes,
     IAnalysisRepository analyses,
     ILLMProvider llmProvider,
-    IScoringEngine scoringEngine) : IAnalysisService
+    IScoringEngine scoringEngine,
+    IOptions<ScoringOptions>? scoringOptions = null) : IAnalysisService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -77,12 +78,50 @@ public sealed class AnalysisService(
         var comparison = await llmProvider.CompareAsync(resume.ExtractedText, command.JobDescription, cancellationToken);
         var skills = Ratio(comparison.MatchedSkills.Count, comparison.MissingSkills.Count);
         var requirements = Ratio(comparison.RequirementsMet.Count, comparison.RequirementsMissing.Count);
-        var score = scoringEngine.Calculate(new(skills, comparison.ExperienceMatch, comparison.SeniorityMatch, requirements, comparison.EducationMatch));
+
+        var reqSeniority = SeniorityEvaluator.Parse(comparison.RequiredSeniority);
+        if (reqSeniority == SeniorityLevel.NotSpecified)
+            reqSeniority = SeniorityEvaluator.Parse(command.JobDescription);
+
+        var candSeniority = SeniorityEvaluator.Parse(comparison.CandidateSeniority);
+        if (candSeniority == SeniorityLevel.NotSpecified)
+            candSeniority = SeniorityEvaluator.Parse(resume.ExtractedText);
+
+        double seniority;
+        if (reqSeniority != SeniorityLevel.NotSpecified || candSeniority != SeniorityLevel.NotSpecified)
+        {
+            seniority = SeniorityEvaluator.Evaluate(reqSeniority, candSeniority, scoringOptions?.Value);
+        }
+        else
+        {
+            seniority = comparison.SeniorityMatch;
+        }
+
+        double experience;
+        if (comparison.RequiredExperienceYears.HasValue || comparison.CandidateExperienceYears.HasValue)
+        {
+            experience = ExperienceEvaluator.Evaluate(comparison.RequiredExperienceYears, comparison.CandidateExperienceYears);
+        }
+        else
+        {
+            experience = comparison.ExperienceMatch;
+        }
+
+        var pointsOfAttention = comparison.PointsOfAttention.ToList();
+        if (SeniorityEvaluator.IsOverqualified(reqSeniority, candSeniority) &&
+            !pointsOfAttention.Any(p => p.Text.Contains("senioridade superior", StringComparison.OrdinalIgnoreCase) || p.Text.Contains("sobrequalifica", StringComparison.OrdinalIgnoreCase)))
+        {
+            pointsOfAttention.Add(new EvidenceItemModel(
+                "O histórico profissional indica senioridade superior à exigida pela vaga, o que pode gerar possível desalinhamento de escopo, remuneração ou expectativa de carreira.",
+                $"Nível exigido: {reqSeniority}, Nível identificado no candidato: {candSeniority}"));
+        }
+
+        var score = scoringEngine.Calculate(new(skills, experience, seniority, requirements, comparison.EducationMatch));
         var id = Guid.NewGuid();
         var result = new AnalysisResultModel(id, resume.Id, score.Overall, score.Skills, score.Experience, score.Seniority,
             score.Requirements, score.Education, comparison.MatchedSkills, comparison.MissingSkills,
             comparison.RequirementsMet, comparison.RequirementsMissing, comparison.Strengths,
-            comparison.PointsOfAttention, comparison.Recommendations);
+            pointsOfAttention, comparison.Recommendations);
         var analysis = new AnalysisEntity
         {
             Id = id,
