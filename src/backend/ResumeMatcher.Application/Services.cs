@@ -17,7 +17,7 @@ public sealed class WeightedScoringEngine : IScoringEngine
             throw new InvalidOperationException("Scoring weights must add up to 1.");
     }
 
-    public ScoreBreakdown Calculate(ScoreComponents components)
+    public ScoreBreakdownModel Calculate(ScoreComponentsModel components)
     {
         static double Normalize(double value)
         {
@@ -40,7 +40,7 @@ public sealed class ResumeService(IEnumerable<IResumeTextExtractor> extractors, 
 {
     private const long MaxFileSize = 10 * 1024 * 1024;
 
-    public async Task<UploadResumeResult> UploadAsync(UploadResumeCommand command, CancellationToken cancellationToken)
+    public async Task<UploadResumeResultModel> UploadAsync(UploadResumeCommand command, CancellationToken cancellationToken)
     {
         if (!command.Content.CanRead)
             throw new InvalidResumeException("The uploaded file cannot be read.");
@@ -54,7 +54,7 @@ public sealed class ResumeService(IEnumerable<IResumeTextExtractor> extractors, 
         if (string.IsNullOrWhiteSpace(text))
             throw new InvalidResumeException("No text could be extracted from the resume.");
 
-        var resume = new Resume { FileName = Path.GetFileName(command.FileName), ContentType = command.ContentType, ExtractedText = text };
+        var resume = new ResumeEntity { FileName = Path.GetFileName(command.FileName), ContentType = command.ContentType, ExtractedText = text };
         await repository.AddAsync(resume, cancellationToken);
         return new(resume.Id, resume.FileName, text.Length);
     }
@@ -68,7 +68,7 @@ public sealed class AnalysisService(
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    public async Task<AnalysisResult> CompareAsync(CompareCommand command, CancellationToken cancellationToken)
+    public async Task<AnalysisResultModel> CompareAsync(CompareCommand command, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(command.JobDescription))
             throw new ArgumentException("Job description is required.");
@@ -79,11 +79,11 @@ public sealed class AnalysisService(
         var requirements = Ratio(comparison.RequirementsMet.Count, comparison.RequirementsMissing.Count);
         var score = scoringEngine.Calculate(new(skills, comparison.ExperienceMatch, comparison.SeniorityMatch, requirements, comparison.EducationMatch));
         var id = Guid.NewGuid();
-        var result = new AnalysisResult(id, resume.Id, score.Overall, score.Skills, score.Experience, score.Seniority,
+        var result = new AnalysisResultModel(id, resume.Id, score.Overall, score.Skills, score.Experience, score.Seniority,
             score.Requirements, score.Education, comparison.MatchedSkills, comparison.MissingSkills,
             comparison.RequirementsMet, comparison.RequirementsMissing, comparison.Strengths,
             comparison.PointsOfAttention, comparison.Recommendations);
-        var analysis = new Analysis
+        var analysis = new AnalysisEntity
         {
             Id = id,
             ResumeId = resume.Id,
@@ -100,10 +100,10 @@ public sealed class AnalysisService(
         return result;
     }
 
-    public async Task<AnalysisResult?> GetAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<AnalysisResultModel?> GetAsync(Guid id, CancellationToken cancellationToken)
     {
         var analysis = await analyses.GetAsync(id, cancellationToken);
-        return analysis is null ? null : JsonSerializer.Deserialize<AnalysisResult>(analysis.ResultJson, JsonOptions);
+        return analysis is null ? null : JsonSerializer.Deserialize<AnalysisResultModel>(analysis.ResultJson, JsonOptions);
     }
 
     private static double Ratio(int matched, int missing)

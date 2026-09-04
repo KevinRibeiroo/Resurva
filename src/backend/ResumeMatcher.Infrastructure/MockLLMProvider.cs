@@ -13,24 +13,24 @@ public sealed partial class MockLLMProvider : ILLMProvider
         "Git", "REST", "GraphQL", "Redis", "RabbitMQ", "Kafka", "Entity Framework", "Scrum"
     ];
 
-    public Task<StructuredComparison> CompareAsync(string resumeText, string jobDescription, CancellationToken cancellationToken)
+    public Task<StructuredComparisonModel> CompareAsync(string resumeText, string jobDescription, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var jobSkills = Skills.Where(skill => Contains(jobDescription, skill)).ToArray();
         var matched = jobSkills.Where(skill => Contains(resumeText, skill))
-            .Select(skill => new EvidenceItem(skill, FindEvidence(resumeText, skill))).ToArray();
+            .Select(skill => new EvidenceItemModel(skill, FindEvidence(resumeText, skill))).ToArray();
         var missing = jobSkills.Except(matched.Select(x => x.Text), StringComparer.OrdinalIgnoreCase)
-            .Select(skill => new EvidenceItem(skill)).ToArray();
+            .Select(skill => new EvidenceItemModel(skill)).ToArray();
 
         var requirements = ExtractRequirements(jobDescription);
         var met = requirements.Where(requirement => SignificantWords(requirement).Any(word => Contains(resumeText, word)))
-            .Select(requirement => new EvidenceItem(requirement, FindEvidence(resumeText, SignificantWords(requirement).FirstOrDefault() ?? requirement))).ToArray();
-        var unmet = requirements.Except(met.Select(x => x.Text)).Select(x => new EvidenceItem(x)).ToArray();
-        var strengths = matched.Take(4).Select(x => new EvidenceItem($"Experiência evidenciada em {x.Text}.", x.Evidence)).ToArray();
-        var attention = missing.Take(4).Select(x => new EvidenceItem($"A vaga cita {x.Text}, sem evidência explícita no currículo.")).ToArray();
-        var recommendations = missing.Take(3).Select(x => new EvidenceItem($"Não adicionar {x.Text} sem confirmação e evidência do candidato.")).ToArray();
+            .Select(requirement => new EvidenceItemModel(requirement, FindEvidence(resumeText, SignificantWords(requirement).FirstOrDefault() ?? requirement))).ToArray();
+        var unmet = requirements.Except(met.Select(x => x.Text)).Select(x => new EvidenceItemModel(x)).ToArray();
+        var strengths = matched.Take(4).Select(x => new EvidenceItemModel($"Experiência evidenciada em {x.Text}.", x.Evidence)).ToArray();
+        var attention = missing.Take(4).Select(x => new EvidenceItemModel($"A vaga cita {x.Text}, sem evidência explícita no currículo.")).ToArray();
+        var recommendations = missing.Take(3).Select(x => new EvidenceItemModel($"Não adicionar {x.Text} sem confirmação e evidência do candidato.")).ToArray();
 
-        return Task.FromResult(new StructuredComparison(matched, missing, met, unmet, strengths, attention, recommendations,
+        return Task.FromResult(new StructuredComparisonModel(matched, missing, met, unmet, strengths, attention, recommendations,
             KeywordDimension(resumeText, jobDescription, "experiência", "anos", "desenvolvimento"),
             KeywordDimension(resumeText, jobDescription, "júnior", "pleno", "sênior", "senior", "liderança"),
             KeywordDimension(resumeText, jobDescription, "graduação", "bacharel", "tecnólogo", "formação", "superior")));

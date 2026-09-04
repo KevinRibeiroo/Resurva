@@ -19,7 +19,7 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 
 ### 1. Consolidar a base técnica
 
-- [ ] Aplicar integralmente a convenção de arquivos `Entity`, `Model` e interfaces `I...`.
+- [x] Aplicar integralmente a convenção de arquivos `Entity`, `Model` e interfaces `I...`.
 - [ ] Separar tipos públicos que ainda estejam agrupados em arquivos genéricos.
 - [ ] Adicionar análise estática, formatação e validações no build.
 - [ ] Criar testes de integração para os endpoints HTTP.

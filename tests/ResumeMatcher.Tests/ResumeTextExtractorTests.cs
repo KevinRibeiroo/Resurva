@@ -63,14 +63,14 @@ public sealed class ResumeTextExtractorTests
 
     private sealed class StubRepository : IResumeRepository
     {
-        public Task AddAsync(Domain.Resume resume, CancellationToken cancellationToken)
+        public Task AddAsync(Domain.ResumeEntity resume, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
 
-        public Task<Domain.Resume?> GetAsync(Guid id, CancellationToken cancellationToken)
+        public Task<Domain.ResumeEntity?> GetAsync(Guid id, CancellationToken cancellationToken)
         {
-            return Task.FromResult<Domain.Resume?>(null);
+            return Task.FromResult<Domain.ResumeEntity?>(null);
         }
     }
 
