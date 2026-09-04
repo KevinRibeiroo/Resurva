@@ -27,12 +27,12 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 
 ### 2. Provider de IA real
 
-- [ ] Implementar um provider real atrás de `ILLMProvider`.
-- [ ] Definir schema estruturado e validar toda resposta do modelo.
-- [ ] Configurar timeout, cancelamento, retry com limite e tratamento de indisponibilidade.
-- [ ] Armazenar chaves somente em Secret Manager ou variáveis de ambiente.
+- [x] Implementar um provider real atrás de `ILLMProvider` (`GeminiLLMProvider`).
+- [x] Definir schema estruturado e validar toda resposta do modelo.
+- [ ] Configurar timeout, retry com limite e tratamento de indisponibilidade.
+- [x] Armazenar chaves somente em Secret Manager ou variáveis de ambiente.
 - [ ] Informar ao usuário quando o currículo for enviado a um serviço externo.
-- [ ] Manter o Mock disponível para desenvolvimento e testes.
+- [x] Manter o Mock disponível para desenvolvimento e testes.
 
 ### 3. Persistência e privacidade
 
