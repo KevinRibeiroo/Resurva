@@ -21,20 +21,28 @@ public sealed class AnalysisServiceSeniorityTests
     {
         public AnalysisEntity? SavedEntity { get; private set; }
 
-        public Task AddAsync(AnalysisEntity entity, CancellationToken cancellationToken)
+        public Task<bool> TryAddAsync(AnalysisEntity entity, CancellationToken cancellationToken)
         {
             SavedEntity = entity;
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
 
         public Task<AnalysisEntity?> GetAsync(Guid id, CancellationToken cancellationToken)
         {
             return Task.FromResult(SavedEntity);
         }
+
+        public Task<AnalysisEntity?> GetByInputHashAsync(string analysisInputHash, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(SavedEntity?.AnalysisInputHash == analysisInputHash ? SavedEntity : null);
+        }
     }
 
     private sealed class FakeLLMProvider(StructuredComparisonModel comparison) : ILLMProvider
     {
+        public string ModelName => "test-model";
+        public string PromptVersion => "v1";
+
         public Task<StructuredComparisonModel> CompareAsync(string resumeText, string jobDescription, CancellationToken cancellationToken)
         {
             return Task.FromResult(comparison);
