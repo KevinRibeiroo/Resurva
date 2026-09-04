@@ -47,6 +47,7 @@ Implementa os contratos da camada Application:
 - `PdfResumeTextExtractor` com PdfPig;
 - `DocxResumeTextExtractor` com Open XML SDK;
 - `MockLLMProvider`, usado para validar o pipeline sem API externa;
+- `GeminiLLMProvider`, provider real com Gemini 2.5 Flash via Google.GenAI;
 - registro das dependências de infraestrutura.
 
 ### ResumeMatcher.Api
