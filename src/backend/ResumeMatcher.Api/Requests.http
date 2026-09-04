@@ -1,0 +1,30 @@
+@ResumeMatcher_Api_HostAddress = http://localhost:5080
+@ResumeId = 00000000-0000-0000-0000-000000000000
+@AnalysisId = 00000000-0000-0000-0000-000000000000
+
+### Enviar currículo
+
+POST {{ResumeMatcher_Api_HostAddress}}/api/resumes/upload
+Content-Type: multipart/form-data; boundary=ResumeMatcherBoundary
+
+--ResumeMatcherBoundary
+Content-Disposition: form-data; name="file"; filename="resume.pdf"
+Content-Type: application/pdf
+
+< ./resume.pdf
+--ResumeMatcherBoundary--
+
+### Comparar currículo com uma vaga
+
+POST {{ResumeMatcher_Api_HostAddress}}/api/analysis/compare
+Content-Type: application/json
+
+{
+  "resumeId": "{{ResumeId}}",
+  "jobDescription": "Desenvolvedor .NET com experiência em C#, ASP.NET Core, SQL e Docker."
+}
+
+### Consultar uma análise
+
+GET {{ResumeMatcher_Api_HostAddress}}/api/analysis/{{AnalysisId}}
+Accept: application/json
