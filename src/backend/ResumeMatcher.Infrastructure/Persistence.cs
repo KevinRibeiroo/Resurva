@@ -6,31 +6,31 @@ namespace ResumeMatcher.Infrastructure;
 
 public sealed class ResumeMatcherDbContext(DbContextOptions<ResumeMatcherDbContext> options) : DbContext(options)
 {
-    public DbSet<Resume> Resumes
+    public DbSet<ResumeEntity> Resumes
     {
         get
         {
-            return Set<Resume>();
+            return Set<ResumeEntity>();
         }
     }
 
-    public DbSet<Analysis> Analyses
+    public DbSet<AnalysisEntity> Analyses
     {
         get
         {
-            return Set<Analysis>();
+            return Set<AnalysisEntity>();
         }
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Resume>(entity =>
+        modelBuilder.Entity<ResumeEntity>(entity =>
         {
             entity.HasKey(x => x.Id);
             entity.Property(x => x.FileName).HasMaxLength(260);
             entity.Property(x => x.ContentType).HasMaxLength(100);
         });
-        modelBuilder.Entity<Analysis>(entity =>
+        modelBuilder.Entity<AnalysisEntity>(entity =>
         {
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.ResumeId);
@@ -40,13 +40,13 @@ public sealed class ResumeMatcherDbContext(DbContextOptions<ResumeMatcherDbConte
 
 internal sealed class ResumeRepository(ResumeMatcherDbContext db) : IResumeRepository
 {
-    public async Task AddAsync(Resume resume, CancellationToken cancellationToken)
+    public async Task AddAsync(ResumeEntity resume, CancellationToken cancellationToken)
     {
         db.Resumes.Add(resume);
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    public Task<Resume?> GetAsync(Guid id, CancellationToken cancellationToken)
+    public Task<ResumeEntity?> GetAsync(Guid id, CancellationToken cancellationToken)
     {
         return db.Resumes.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
@@ -54,13 +54,13 @@ internal sealed class ResumeRepository(ResumeMatcherDbContext db) : IResumeRepos
 
 internal sealed class AnalysisRepository(ResumeMatcherDbContext db) : IAnalysisRepository
 {
-    public async Task AddAsync(Analysis analysis, CancellationToken cancellationToken)
+    public async Task AddAsync(AnalysisEntity analysis, CancellationToken cancellationToken)
     {
         db.Analyses.Add(analysis);
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    public Task<Analysis?> GetAsync(Guid id, CancellationToken cancellationToken)
+    public Task<AnalysisEntity?> GetAsync(Guid id, CancellationToken cancellationToken)
     {
         return db.Analyses.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
