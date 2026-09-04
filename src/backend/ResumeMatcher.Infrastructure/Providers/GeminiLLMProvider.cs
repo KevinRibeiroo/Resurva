@@ -10,12 +10,17 @@ namespace ResumeMatcher.Infrastructure;
 
 public sealed class GeminiLLMProvider : ILLMProvider
 {
+    public const string CurrentPromptVersion = "v1";
+
     private readonly GeminiOptions _options;
     private readonly Client _client;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
+
+    public string ModelName => _options.Model;
+    public string PromptVersion => CurrentPromptVersion;
 
     private static string BuildSystemInstruction(string currentDate) => $"""
         Você é um avaliador técnico imparcial e rigoroso de currículos.

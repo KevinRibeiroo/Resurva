@@ -10,9 +10,9 @@ O ResumeMatcher compara currículos em PDF/DOCX com descrições de vagas. Ele a
 
 - O MVP possui backend .NET 8 e frontend React.
 - O upload, a extração, a comparação, a pontuação e a persistência local funcionam.
-- O único provider suportado é `MockLLMProvider`.
-- `Google.GenAI` está referenciado, mas ainda não existe um provider real implementado.
-- SQLite usa `EnsureCreatedAsync`; ainda não há migrations.
+- `MockLLMProvider` é o padrão; `GeminiLLMProvider` pode ser habilitado por configuração.
+- A persistência usa PostgreSQL/Npgsql e migrations do Entity Framework Core.
+- Análises idênticas são reutilizadas pelo `AnalysisInputHash`; modelo, versão do prompt e versão das regras fazem parte da chave.
 - Não há autenticação, CI/CD nem implantação de produção.
 - Consulte `docs/ROADMAP.md` antes de afirmar que algo futuro já está disponível.
 
@@ -68,7 +68,8 @@ Não conclua mudanças com erros de build ou testes conhecidos sem descrevê-los
 - Backend HTTP: `http://localhost:5080`.
 - Frontend Vite: `http://localhost:5173`.
 - O proxy `/api` deve apontar para a porta `5080`.
-- O banco SQLite local é `resumematcher.db` e está ignorado pelo Git.
+- A conexão PostgreSQL vem de `ConnectionStrings:ResumeMatcher`; credenciais locais devem ficar em variável de ambiente ou Secret Manager.
+- A API aplica migrations automaticamente ao iniciar.
 - Pesos de scoring ficam em `appsettings.json` e devem somar `1`.
 
 ## Prioridades
@@ -76,8 +77,8 @@ Não conclua mudanças com erros de build ou testes conhecidos sem descrevê-los
 1. Manter o pipeline atual estável e testado.
 2. Concluir a organização de nomes e arquivos.
 3. Adicionar testes de integração e CI.
-4. Implementar provider real com saída estruturada e controles de privacidade.
-5. Evoluir persistência, autenticação e retenção de dados.
+4. Reforçar os controles de privacidade e resiliência do provider real.
+5. Evoluir autenticação, retenção de dados e estratégia de backup.
 6. Implementar otimização de currículo com confirmação explícita.
 
 ## Ao iniciar uma nova tarefa

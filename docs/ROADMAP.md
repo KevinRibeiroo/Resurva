@@ -8,7 +8,8 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 - [x] Frontend React com TypeScript e Vite.
 - [x] Upload de PDF e DOCX com limite de tamanho.
 - [x] Extração local de texto.
-- [x] Persistência local com EF Core e SQLite.
+- [x] Persistência com EF Core, PostgreSQL e migrations.
+- [x] Cache persistido por conteúdo, modelo e versões de análise.
 - [x] Provider Mock para comparação sem serviço externo.
 - [x] Score ponderado e determinístico.
 - [x] Resultado com evidências, lacunas, forças e recomendações.
@@ -36,7 +37,8 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 
 ### 3. Persistência e privacidade
 
-- [ ] Substituir `EnsureCreatedAsync` por migrations do EF Core.
+- [x] Substituir `EnsureCreatedAsync` por migrations do EF Core.
+- [ ] Planejar e executar a transferência de dados SQLite legados, caso precisem ser preservados.
 - [ ] Definir política de retenção e exclusão de currículos.
 - [ ] Evitar persistir texto integral quando ele não for necessário.
 - [ ] Implementar autenticação antes de armazenar dados de múltiplos usuários.

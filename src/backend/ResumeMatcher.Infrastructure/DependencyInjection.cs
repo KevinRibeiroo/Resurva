@@ -9,7 +9,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<ResumeMatcherDbContext>(options => options.UseSqlite(configuration.GetConnectionString("ResumeMatcher") ?? "Data Source=resumematcher.db"));
+        var connectionString = configuration.GetConnectionString("ResumeMatcher")
+            ?? throw new InvalidOperationException("Connection string 'ResumeMatcher' is required.");
+        services.AddDbContext<ResumeMatcherDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped<IResumeRepository, ResumeRepository>();
         services.AddScoped<IAnalysisRepository, AnalysisRepository>();
         services.AddScoped<IResumeTextExtractor, PdfResumeTextExtractor>();

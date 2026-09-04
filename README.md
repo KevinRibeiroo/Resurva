@@ -2,7 +2,7 @@
 
 Aplicação web para comparar um currículo com uma descrição de vaga e apresentar uma análise estruturada de aderência. O objetivo é ajudar candidatos a identificar competências encontradas, lacunas e pontos de atenção sem inventar experiências ou qualificações.
 
-> **Estado atual:** MVP funcional. A análise usa um provider local `Mock`, com vocabulário controlado e pontuação determinística. Nenhuma API externa é necessária para executar o projeto.
+> **Estado atual:** MVP funcional. O `Mock` continua sendo o provider padrão para desenvolvimento local, e o Gemini pode ser habilitado por configuração. A pontuação final permanece determinística no backend.
 
 ## Funcionalidades
 
@@ -11,7 +11,8 @@ Aplicação web para comparar um currículo com uma descrição de vaga e aprese
 - Comparação com a descrição de uma vaga.
 - Pontuação geral e por dimensão: skills, experiência, senioridade, requisitos e formação.
 - Evidências textuais para itens encontrados no currículo.
-- Persistência local dos currículos e resultados em SQLite.
+- Persistência de currículos e resultados em PostgreSQL.
+- Reutilização persistida de análises idênticas, sem uma nova chamada ao provider de IA.
 - Interface web para upload e visualização da análise.
 - Validação de segurança para impedir sugestões que adicionem informações não confirmadas.
 
@@ -20,13 +21,13 @@ Aplicação web para comparar um currículo com uma descrição de vaga e aprese
 | Área | Tecnologias |
 | --- | --- |
 | Backend | C# 12, .NET 8, ASP.NET Core Web API |
-| Persistência | Entity Framework Core 8 e SQLite |
+| Persistência | Entity Framework Core 8, Npgsql e PostgreSQL |
 | Extração de documentos | PdfPig e Open XML SDK |
 | Frontend | React 19, TypeScript 5.9 e Vite 7 |
 | Testes | xUnit, Microsoft.NET.Test.Sdk e coverlet |
-| IA | Abstração `ILLMProvider`; implementação atual `MockLLMProvider` |
+| IA | Abstração `ILLMProvider`; providers `MockLLMProvider` e `GeminiLLMProvider` |
 
-O pacote `Google.GenAI` está referenciado na infraestrutura, mas a integração real ainda não foi implementada. O projeto não envia currículos a serviços externos no estado atual.
+O `MockLLMProvider` não envia conteúdo a serviços externos. Quando `LLM:Provider` é configurado como `Gemini`, o texto do currículo e a descrição da vaga são enviados ao serviço Google configurado; use essa opção somente com os controles de privacidade adequados.
 
 ## Arquitetura
 
@@ -47,7 +48,7 @@ Infrastructure -----+
 
 - **Domain:** entidades e modelos centrais, sem dependências de infraestrutura.
 - **Application:** contratos, serviços, regras de pontuação e casos de uso.
-- **Infrastructure:** SQLite, repositórios, extração de PDF/DOCX e provider de comparação.
+- **Infrastructure:** PostgreSQL, repositórios, migrations, extração de PDF/DOCX e providers de comparação.
 - **Api:** composição da aplicação, middleware HTTP e controllers.
 - **Frontend:** experiência de upload, comparação e apresentação dos resultados.
 
@@ -77,6 +78,7 @@ ResumeProject/
 - [.NET SDK 8](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [Node.js 20.19 ou superior](https://nodejs.org/)
 - [pnpm](https://pnpm.io/installation)
+- [PostgreSQL](https://www.postgresql.org/download/) com um banco chamado `resumematcher`
 
 ## Executar localmente
 
@@ -85,11 +87,14 @@ ResumeProject/
 Na raiz do repositório:
 
 ```powershell
+$env:ConnectionStrings__ResumeMatcher = "Host=localhost;Port=5432;Database=resumematcher;Username=postgres;Password=SUA_SENHA"
 dotnet restore ResumeMatcher.slnx
 dotnet run --project src/backend/ResumeMatcher.Api
 ```
 
-A API inicia em `http://localhost:5080` usando o perfil HTTP do projeto. O banco `resumematcher.db` é criado automaticamente e não deve ser versionado.
+A API inicia em `http://localhost:5080` usando o perfil HTTP do projeto. As migrations do Entity Framework são aplicadas automaticamente na inicialização. A configuração versionada não contém senha; informe credenciais por variável de ambiente ou Secret Manager.
+
+Essa mudança cria o esquema no PostgreSQL, mas não copia automaticamente dados de um arquivo SQLite antigo. Se houver dados locais que precisem ser preservados, faça uma migração de dados antes de remover o banco anterior.
 
 ### 2. Frontend
 
@@ -126,12 +131,17 @@ Exemplos executáveis estão em [`Requests.http`](src/backend/ResumeMatcher.Api/
 
 As configurações principais ficam em `src/backend/ResumeMatcher.Api/appsettings.json`:
 
-- `ConnectionStrings:ResumeMatcher`: caminho do banco SQLite.
-- `LLM:Provider`: somente `Mock` é suportado atualmente.
+- `ConnectionStrings:ResumeMatcher`: conexão com o PostgreSQL.
+- `LLM:Provider`: `Mock` por padrão ou `Gemini`.
+- `LLM:Model`: identificador do modelo, usado também na chave do cache de análises.
 - `Scoring`: pesos das cinco dimensões; a soma deve ser igual a `1`.
 - `Cors:Origins`: origens autorizadas a acessar a API.
 
-Não versione chaves, tokens ou credenciais. Futuras integrações externas devem usar variáveis de ambiente ou o Secret Manager do .NET.
+Não versione chaves, tokens ou credenciais. Configure `ConnectionStrings__ResumeMatcher`, `LLM__ApiKey` e demais segredos por variáveis de ambiente ou pelo Secret Manager do .NET.
+
+## Consistência das análises
+
+Antes de chamar o provider, o backend calcula um SHA-256 com o texto normalizado do currículo, a vaga normalizada, o modelo, a versão do prompt e a versão das regras de análise. Se o hash já estiver persistido, a resposta salva é devolvida sem chamar novamente o Mock ou o Gemini e sem recalcular a saída do LLM. Alterações reais no prompt ou nas regras devem incrementar suas versões explícitas para permitir uma nova análise.
 
 ## Compilar e testar
 
