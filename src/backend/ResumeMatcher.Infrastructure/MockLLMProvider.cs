@@ -6,6 +6,9 @@ namespace ResumeMatcher.Infrastructure;
 
 public sealed partial class MockLLMProvider : ILLMProvider
 {
+    public string ModelName => "mock-v1";
+    public string PromptVersion => "v1";
+
     private static readonly string[] Skills =
     [
         "C#", ".NET", "ASP.NET Core", "Java", "Python", "JavaScript", "TypeScript", "React", "Angular", "Vue",

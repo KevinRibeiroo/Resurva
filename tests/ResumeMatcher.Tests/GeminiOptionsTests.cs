@@ -26,7 +26,7 @@ public sealed class GeminiOptionsTests
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:ResumeMatcher"] = "Data Source=:memory:",
+                ["ConnectionStrings:ResumeMatcher"] = "Host=localhost;Database=resumematcher_test;Username=postgres",
                 ["LLM:Provider"] = "Gemini",
                 ["LLM:ApiKey"] = "test-api-key",
                 ["LLM:Model"] = "gemini-2.5-flash"
@@ -47,7 +47,7 @@ public sealed class GeminiOptionsTests
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:ResumeMatcher"] = "Data Source=:memory:",
+                ["ConnectionStrings:ResumeMatcher"] = "Host=localhost;Database=resumematcher_test;Username=postgres",
                 ["LLM:Provider"] = "Mock"
             })
             .Build();
