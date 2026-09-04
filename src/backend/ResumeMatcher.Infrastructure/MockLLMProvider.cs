@@ -30,10 +30,24 @@ public sealed partial class MockLLMProvider : ILLMProvider
         var attention = missing.Take(4).Select(x => new EvidenceItemModel($"A vaga cita {x.Text}, sem evidência explícita no currículo.")).ToArray();
         var recommendations = missing.Take(3).Select(x => new EvidenceItemModel($"Não adicionar {x.Text} sem confirmação e evidência do candidato.")).ToArray();
 
-        return Task.FromResult(new StructuredComparisonModel(matched, missing, met, unmet, strengths, attention, recommendations,
+        var reqSeniority = SeniorityEvaluator.Parse(jobDescription);
+        var candSeniority = SeniorityEvaluator.Parse(resumeText);
+        var seniorityMatch = SeniorityEvaluator.Evaluate(reqSeniority, candSeniority);
+
+        var attentionList = attention.ToList();
+        if (SeniorityEvaluator.IsOverqualified(reqSeniority, candSeniority))
+        {
+            attentionList.Add(new EvidenceItemModel(
+                "O histórico profissional indica senioridade superior à exigida pela vaga, o que pode gerar possível desalinhamento de escopo, remuneração ou expectativa de carreira.",
+                $"Vaga: {reqSeniority}, Candidato: {candSeniority}"));
+        }
+
+        return Task.FromResult(new StructuredComparisonModel(matched, missing, met, unmet, strengths, attentionList, recommendations,
             KeywordDimension(resumeText, jobDescription, "experiência", "anos", "desenvolvimento"),
-            KeywordDimension(resumeText, jobDescription, "júnior", "pleno", "sênior", "senior", "liderança"),
-            KeywordDimension(resumeText, jobDescription, "graduação", "bacharel", "tecnólogo", "formação", "superior")));
+            seniorityMatch,
+            KeywordDimension(resumeText, jobDescription, "graduação", "bacharel", "tecnólogo", "formação", "superior"),
+            CandidateSeniority: candSeniority == SeniorityLevel.NotSpecified ? null : candSeniority.ToString(),
+            RequiredSeniority: reqSeniority == SeniorityLevel.NotSpecified ? null : reqSeniority.ToString()));
     }
 
     private static double KeywordDimension(string resume, string job, params string[] terms)

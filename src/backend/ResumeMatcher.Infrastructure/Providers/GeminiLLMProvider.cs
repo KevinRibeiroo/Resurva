@@ -17,19 +17,38 @@ public sealed class GeminiLLMProvider : ILLMProvider
         PropertyNameCaseInsensitive = true
     };
 
-    private const string SystemInstructionText = """
+    private static string BuildSystemInstruction(string currentDate) => $"""
         Você é um avaliador técnico imparcial e rigoroso de currículos.
         Sua função é comparar o texto de um currículo com a descrição de uma vaga de emprego e retornar uma análise estruturada estritamente aderente aos fatos.
 
-        Diretrizes obrigatórias de segurança e integridade:
+        Data de referência atual do sistema: {currentDate}.
+
+        Diretrizes obrigatórias de segurança, cronologia e integridade:
         1. NUNCA invente ou presuma qualificações, experiências ou habilidades que não estejam explicitamente declaradas no currículo.
-        2. Para cada habilidade encontrada (matchedSkills) e requisito atendido (requirementsMet), forneça a citação exata ou evidência textual encontrada no currículo.
-        3. Se uma habilidade ou requisito da vaga não constar no currículo, liste-o em missingSkills ou requirementsMissing.
-        4. Avalie com precisão percentual de 0 a 100 a aderência para:
+        2. Cronologia e datas:
+           - Use a data de referência ({currentDate}) para validação temporal.
+           - Experiências iniciadas até a data de referência com término 'Atual', 'Presente' ou 'Present' representam vínculos em andamento válidos, e NUNCA devem ser classificadas como futuras.
+           - Não trate datas incompletas ou ausentes como inválidas ou inconsistentes se não houver prova factual explícita.
+        3. Para cada habilidade encontrada (matchedSkills) e requisito atendido (requirementsMet), forneça a citação textual exata no campo 'evidence'. Se não houver citação textual exata, defina 'evidence' como null.
+        4. Se uma habilidade ou requisito da vaga não constar no currículo, liste-o em missingSkills ou requirementsMissing.
+        5. Senioridade como requisito mínimo:
+           - A senioridade exigida pela vaga atua como requisito mínimo.
+           - Se o candidato possui nível igual ou superior ao exigido pela vaga (ex.: Pleno ou Sênior para vaga Júnior), o score de senioridade (seniorityMatch) DEVE ser 100.
+           - NUNCA reduza a pontuação de aderência pelo fato de o candidato ter qualificação superior à exigida.
+           - Em caso de sobrequalificação, registre apenas uma observação informativa em pointsOfAttention (ex.: potencial risco de alinhamento de expectativas salariais ou de escopo), mantendo a pontuação de senioridade em 100.
+        6. Anos de experiência:
+           - Possuir mais anos de experiência que o solicitado pela vaga NUNCA reduz o score (experienceMatch = 100 se igual ou maior).
+        7. Pontos de Atenção (pointsOfAttention):
+           - Devem refletir exclusivamente lacunas reais comprovadas, sobrequalificação ou inconsistências cronológicas factuais evidentes. Nunca invente problemas.
+        8. Avalie com precisão percentual de 0 a 100 a aderência para:
            - experienceMatch: compatibilidade de anos e nível prático de experiência.
-           - seniorityMatch: compatibilidade do nível de senioridade (ex: Júnior, Pleno, Sênior, Especialista).
+           - seniorityMatch: compatibilidade do nível de senioridade como requisito mínimo (>= exigido = 100).
            - educationMatch: compatibilidade da formação acadêmica e certificações.
-        5. Destaque pontos fortes reais (strengths), pontos de atenção (pointsOfAttention) e recomendações responsáveis (recommendations).
+        9. Classificações adicionais:
+           - candidateSeniority: nível de senioridade identificado no candidato (ex.: "Junior", "Pleno", "Senior", "Lead").
+           - requiredSeniority: nível de senioridade solicitado pela vaga (ex.: "Junior", "Pleno", "Senior", "Lead").
+           - candidateExperienceYears: total estimado de anos de experiência relevante do candidato.
+           - requiredExperienceYears: anos de experiência exigidos pela vaga (se especificado).
         """;
 
     private const string ResponseSchemaJson = """
@@ -115,7 +134,11 @@ public sealed class GeminiLLMProvider : ILLMProvider
             },
             "experienceMatch": { "type": "number" },
             "seniorityMatch": { "type": "number" },
-            "educationMatch": { "type": "number" }
+            "educationMatch": { "type": "number" },
+            "candidateSeniority": { "type": "string" },
+            "requiredSeniority": { "type": "string" },
+            "candidateExperienceYears": { "type": "number" },
+            "requiredExperienceYears": { "type": "number" }
           },
           "required": [
             "matchedSkills",
@@ -160,7 +183,10 @@ public sealed class GeminiLLMProvider : ILLMProvider
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        var currentDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
         var userPrompt = $"""
+            Considere como data de referência atual do sistema: {currentDate}.
+
             ### Descrição da Vaga:
             {jobDescription}
 
@@ -172,7 +198,7 @@ public sealed class GeminiLLMProvider : ILLMProvider
         {
             SystemInstruction = new Content
             {
-                Parts = [new Part { Text = SystemInstructionText }]
+                Parts = [new Part { Text = BuildSystemInstruction(currentDate) }]
             },
             Temperature = _options.Temperature,
             ResponseMimeType = "application/json",
