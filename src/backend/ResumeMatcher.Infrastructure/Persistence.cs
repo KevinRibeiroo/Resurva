@@ -34,6 +34,8 @@ public sealed class ResumeMatcherDbContext(DbContextOptions<ResumeMatcherDbConte
         {
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.ResumeId);
+            entity.Property(x => x.AnalysisInputHash).HasMaxLength(64);
+            entity.HasIndex(x => x.AnalysisInputHash).IsUnique();
         });
     }
 }
@@ -54,14 +56,37 @@ internal sealed class ResumeRepository(ResumeMatcherDbContext db) : IResumeRepos
 
 internal sealed class AnalysisRepository(ResumeMatcherDbContext db) : IAnalysisRepository
 {
-    public async Task AddAsync(AnalysisEntity analysis, CancellationToken cancellationToken)
+    public async Task<bool> TryAddAsync(AnalysisEntity analysis, CancellationToken cancellationToken)
     {
         db.Analyses.Add(analysis);
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (DbUpdateException) when (analysis.AnalysisInputHash is not null)
+        {
+            db.Entry(analysis).State = EntityState.Detached;
+            if (await db.Analyses.AsNoTracking().AnyAsync(
+                    x => x.AnalysisInputHash == analysis.AnalysisInputHash,
+                    cancellationToken))
+            {
+                return false;
+            }
+
+            throw;
+        }
     }
 
     public Task<AnalysisEntity?> GetAsync(Guid id, CancellationToken cancellationToken)
     {
         return db.Analyses.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
+    public Task<AnalysisEntity?> GetByInputHashAsync(string analysisInputHash, CancellationToken cancellationToken)
+    {
+        return db.Analyses.AsNoTracking().SingleOrDefaultAsync(
+            x => x.AnalysisInputHash == analysisInputHash,
+            cancellationToken);
     }
 }

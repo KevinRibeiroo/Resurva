@@ -4,6 +4,7 @@ public sealed class AnalysisEntity
 {
     public Guid Id { get; init; } = Guid.NewGuid();
     public Guid ResumeId { get; init; }
+    public string? AnalysisInputHash { get; init; }
     public required string JobDescription { get; init; }
     public double OverallScore { get; init; }
     public double SkillsScore { get; init; }
