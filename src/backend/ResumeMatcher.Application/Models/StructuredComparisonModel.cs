@@ -12,4 +12,8 @@ public sealed record StructuredComparisonModel(
     IReadOnlyList<EvidenceItemModel> Recommendations,
     double ExperienceMatch,
     double SeniorityMatch,
-    double EducationMatch);
+    double EducationMatch,
+    string? CandidateSeniority = null,
+    string? RequiredSeniority = null,
+    double? CandidateExperienceYears = null,
+    double? RequiredExperienceYears = null);

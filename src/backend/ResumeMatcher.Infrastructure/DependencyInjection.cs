@@ -15,10 +15,21 @@ public static class DependencyInjection
         services.AddScoped<IResumeTextExtractor, PdfResumeTextExtractor>();
         services.AddScoped<IResumeTextExtractor, DocxResumeTextExtractor>();
 
+        services.Configure<GeminiOptions>(configuration.GetSection(GeminiOptions.SectionName));
+
         var provider = configuration["LLM:Provider"] ?? "Mock";
-        if (!provider.Equals("Mock", StringComparison.OrdinalIgnoreCase))
+        if (provider.Equals("Gemini", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddScoped<ILLMProvider, GeminiLLMProvider>();
+        }
+        else if (provider.Equals("Mock", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddScoped<ILLMProvider, MockLLMProvider>();
+        }
+        else
+        {
             throw new InvalidOperationException($"Unsupported LLM provider '{provider}'.");
-        services.AddScoped<ILLMProvider, MockLLMProvider>();
+        }
         return services;
     }
 }
