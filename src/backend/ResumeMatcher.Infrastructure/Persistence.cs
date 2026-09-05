@@ -33,7 +33,10 @@ public sealed class ResumeMatcherDbContext(DbContextOptions<ResumeMatcherDbConte
         modelBuilder.Entity<AnalysisEntity>(entity =>
         {
             entity.HasKey(x => x.Id);
-            entity.HasIndex(x => x.ResumeId);
+            entity.HasOne<ResumeEntity>()
+                .WithMany()
+                .HasForeignKey(x => x.ResumeId)
+                .OnDelete(DeleteBehavior.Cascade);
             entity.Property(x => x.AnalysisInputHash).HasMaxLength(64);
             entity.HasIndex(x => x.AnalysisInputHash).IsUnique();
         });
@@ -51,6 +54,19 @@ internal sealed class ResumeRepository(ResumeMatcherDbContext db) : IResumeRepos
     public Task<ResumeEntity?> GetAsync(Guid id, CancellationToken cancellationToken)
     {
         return db.Resumes.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var resume = await db.Resumes.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (resume is null)
+            return false;
+
+        var analyses = await db.Analyses.Where(x => x.ResumeId == id).ToListAsync(cancellationToken);
+        db.Analyses.RemoveRange(analyses);
+        db.Resumes.Remove(resume);
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
     }
 }
 

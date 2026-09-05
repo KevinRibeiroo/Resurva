@@ -13,6 +13,8 @@ Aplicação web para comparar um currículo com uma descrição de vaga e aprese
 - Evidências textuais para itens encontrados no currículo.
 - Persistência de currículos e resultados em PostgreSQL.
 - Reutilização persistida de análises idênticas, sem uma nova chamada ao provider de IA.
+- Exclusão de currículo com remoção das análises relacionadas.
+- Health check do banco, limite de requisições e limites de entrada.
 - Interface web para upload e visualização da análise.
 - Validação de segurança para impedir sugestões que adicionem informações não confirmadas.
 
@@ -113,8 +115,10 @@ Abra `http://localhost:5173`. Durante o desenvolvimento, o Vite encaminha chamad
 | Método | Endpoint | Descrição |
 | --- | --- | --- |
 | `POST` | `/api/resumes/upload` | Recebe `multipart/form-data` com o campo `file` em PDF ou DOCX. |
+| `DELETE` | `/api/resumes/{id}` | Exclui o currículo e suas análises. |
 | `POST` | `/api/analysis/compare` | Compara o currículo enviado com uma descrição de vaga. |
 | `GET` | `/api/analysis/{id}` | Recupera uma análise persistida pelo identificador. |
+| `GET` | `/health` | Verifica a disponibilidade da API e do PostgreSQL. |
 
 Exemplo do corpo para comparação:
 
@@ -134,6 +138,9 @@ As configurações principais ficam em `src/backend/ResumeMatcher.Api/appsetting
 - `ConnectionStrings:ResumeMatcher`: conexão com o PostgreSQL.
 - `LLM:Provider`: `Mock` por padrão ou `Gemini`.
 - `LLM:Model`: identificador do modelo, usado também na chave do cache de análises.
+- `LLM:TimeoutSeconds`: tempo máximo de cada tentativa no Gemini.
+- `LLM:MaxRetries`: quantidade limitada de novas tentativas para falhas temporárias.
+- `RateLimiting`: limite de requisições por janela nos controllers da API.
 - `Scoring`: pesos das cinco dimensões; a soma deve ser igual a `1`.
 - `Cors:Origins`: origens autorizadas a acessar a API.
 
@@ -141,7 +148,17 @@ Não versione chaves, tokens ou credenciais. Configure `ConnectionStrings__Resum
 
 ## Consistência das análises
 
-Antes de chamar o provider, o backend calcula um SHA-256 com o texto normalizado do currículo, a vaga normalizada, o modelo, a versão do prompt e a versão das regras de análise. Se o hash já estiver persistido, a resposta salva é devolvida sem chamar novamente o Mock ou o Gemini e sem recalcular a saída do LLM. Alterações reais no prompt ou nas regras devem incrementar suas versões explícitas para permitir uma nova análise.
+Antes de chamar o provider, o backend calcula um SHA-256 com o texto normalizado do currículo, a vaga normalizada, o modelo, as configurações relevantes do LLM, a versão do prompt, a versão das regras e as configurações de scoring. Se o hash já estiver persistido, a resposta salva é devolvida sem chamar novamente o Mock ou o Gemini e sem recalcular a saída do LLM. Alterações reais no prompt ou nas regras devem incrementar suas versões explícitas para permitir uma nova análise.
+
+## Container e publicação
+
+O backend possui um Dockerfile preparado para escutar na porta `8080`:
+
+```powershell
+docker build -f src/backend/ResumeMatcher.Api/Dockerfile -t resumematcher-api .
+```
+
+Para o primeiro ambiente de testes, publique a API sem acesso anônimo e forneça connection string e chave do Gemini por um gerenciador de segredos. Consulte [Publicação privada](docs/DEPLOYMENT.md).
 
 ## Compilar e testar
 
@@ -158,6 +175,7 @@ pnpm build
 - [Arquitetura e fluxo técnico](docs/ARCHITECTURE.md)
 - [Convenções e regras de desenvolvimento](docs/CONVENTIONS.md)
 - [Estado atual e roadmap](docs/ROADMAP.md)
+- [Publicação privada e configuração](docs/DEPLOYMENT.md)
 - [Contexto para manutenção e continuidade](AGENTS.md)
 
 ## Uso responsável

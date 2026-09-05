@@ -56,10 +56,20 @@ public sealed class ResumeService(IEnumerable<IResumeTextExtractor> extractors, 
         var text = (await extractor.ExtractAsync(command.Content, cancellationToken)).Trim();
         if (string.IsNullOrWhiteSpace(text))
             throw new InvalidResumeException("No text could be extracted from the resume.");
+        if (text.Length > AnalysisConstraints.MaxExtractedResumeTextLength)
+            throw new InvalidResumeException($"The extracted resume text exceeds the {AnalysisConstraints.MaxExtractedResumeTextLength} character limit.");
 
         var resume = new ResumeEntity { FileName = Path.GetFileName(command.FileName), ContentType = command.ContentType, ExtractedText = text };
         await repository.AddAsync(resume, cancellationToken);
         return new(resume.Id, resume.FileName, text.Length);
+    }
+
+    public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        if (id == Guid.Empty)
+            throw new ArgumentException("Resume id is required.");
+
+        return repository.DeleteAsync(id, cancellationToken);
     }
 }
 
@@ -74,11 +84,16 @@ public sealed class AnalysisService(
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly ConcurrentDictionary<string, Lazy<Task<AnalysisResultModel>>> InFlightAnalyses = new(StringComparer.Ordinal);
     private readonly ILogger<AnalysisService> _logger = logger ?? NullLogger<AnalysisService>.Instance;
+    private readonly ScoringOptions _scoringOptions = scoringOptions?.Value ?? new ScoringOptions();
 
     public async Task<AnalysisResultModel> CompareAsync(CompareCommand command, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(command.JobDescription))
             throw new ArgumentException("Job description is required.");
+        if (command.ResumeId == Guid.Empty)
+            throw new ArgumentException("Resume id is required.");
+        if (command.JobDescription.Length > AnalysisConstraints.MaxJobDescriptionLength)
+            throw new ArgumentException($"Job description exceeds the {AnalysisConstraints.MaxJobDescriptionLength} character limit.");
 
         var resume = await resumes.GetAsync(command.ResumeId, cancellationToken)
             ?? throw new ResourceNotFoundException("Resume not found.");
@@ -87,8 +102,9 @@ public sealed class AnalysisService(
             resume.ExtractedText,
             command.JobDescription,
             llmProvider.ModelName,
+            llmProvider.ConfigurationFingerprint,
             llmProvider.PromptVersion,
-            AnalysisInputHasher.CurrentAnalysisRulesVersion);
+            GetAnalysisRulesVersion());
 
         var cachedResult = await GetCachedResultAsync(analysisInputHash, cancellationToken);
         if (cachedResult is not null)
@@ -223,5 +239,11 @@ public sealed class AnalysisService(
     private static double Ratio(int matched, int missing)
     {
         return matched + missing == 0 ? 0 : matched * 100d / (matched + missing);
+    }
+
+    private string GetAnalysisRulesVersion()
+    {
+        return FormattableString.Invariant(
+            $"{AnalysisInputHasher.CurrentAnalysisRulesVersion}|weights:{_scoringOptions.SkillsWeight},{_scoringOptions.ExperienceWeight},{_scoringOptions.SeniorityWeight},{_scoringOptions.RequirementsWeight},{_scoringOptions.EducationWeight}|seniority:{_scoringOptions.PlenoRequiredJuniorScore},{_scoringOptions.SeniorRequiredJuniorScore},{_scoringOptions.SeniorRequiredPlenoScore}");
     }
 }

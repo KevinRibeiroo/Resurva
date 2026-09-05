@@ -47,7 +47,8 @@ Implementa os contratos da camada Application:
 - `PdfResumeTextExtractor` com PdfPig;
 - `DocxResumeTextExtractor` com Open XML SDK;
 - `MockLLMProvider`, usado para validar o pipeline sem API externa;
-- `GeminiLLMProvider`, provider real com Gemini 2.5 Flash via Google.GenAI;
+- `GeminiLLMProvider`, provider real com modelo configurável via Google.GenAI;
+- `GeminiRequestExecutor`, responsável por timeout e retry limitado de falhas temporárias;
 - registro das dependências de infraestrutura.
 
 ### ResumeMatcher.Api
@@ -57,6 +58,8 @@ Implementa os contratos da camada Application:
 - registrar dependências e configurações;
 - expor controllers REST;
 - aplicar CORS e tratamento centralizado de exceções;
+- aplicar rate limiting e limites de entrada;
+- expor `/health` com verificação do banco;
 - aplicar migrations do EF Core no PostgreSQL durante a inicialização.
 
 ### Frontend
@@ -112,11 +115,22 @@ A soma precisa ser igual a `1`. Uma configuração inválida impede a criação 
 
 O MVP usa PostgreSQL com Npgsql e migrations do EF Core. Currículos armazenam o texto extraído; análises armazenam scores, o resultado completo serializado em JSON e um `AnalysisInputHash` SHA-256 hexadecimal opcional de 64 caracteres.
 
-O hash é calculado sobre uma representação canônica composta por texto do currículo normalizado, descrição da vaga normalizada, modelo do provider, versão do prompt e versão das regras de análise. A normalização remove espaços e quebras de linha redundantes, mas preserva pontuação e conteúdo semanticamente relevante.
+O hash é calculado sobre uma representação canônica composta por texto do currículo normalizado, descrição da vaga normalizada, modelo e configuração relevante do provider, versão do prompt, versão das regras de análise e configuração de scoring. Atualmente a temperatura do Gemini participa do fingerprint. A normalização remove espaços e quebras de linha redundantes, mas preserva pontuação e conteúdo semanticamente relevante.
 
 `AnalysisInputHash` possui índice único. Dentro de uma instância da API, requisições simultâneas com o mesmo hash compartilham a análise em andamento. O índice também trata a corrida de persistência entre instâncias; nesse caso, o resultado vencedor é recarregado. Em múltiplas instâncias ainda pode haver duas chamadas externas antes da disputa de inserção, pois o MVP não usa lock distribuído.
 
 A migration inicial cria o esquema PostgreSQL. A coluna do hash é anulável para que registros legados possam continuar válidos, embora análises antigas sem fingerprint não participem do cache. Dados existentes em arquivos SQLite não são transferidos automaticamente.
+
+`Analysis.ResumeId` possui foreign key para `Resume.Id`. A exclusão de um currículo remove também suas análises. O serviço executa essa remoção explicitamente para manter o mesmo comportamento nos testes e o banco garante a integridade com `ON DELETE CASCADE`.
+
+## Resiliência e limites
+
+- Chamadas ao Gemini possuem timeout configurável e uma nova tentativa por padrão.
+- Apenas timeout e falhas temporárias de rede, rate limit ou indisponibilidade são repetidos.
+- Erros do provider são convertidos em respostas HTTP `502`, `503` ou `504` conforme a causa.
+- A descrição da vaga aceita no máximo 75.000 caracteres.
+- O texto extraído do currículo aceita no máximo 200.000 caracteres.
+- Controllers da API compartilham um limite configurável de requisições; `/health` permanece fora desse limite.
 
 ## Limites de dependência
 
@@ -133,6 +147,7 @@ Não introduza dependências de infraestrutura na camada Domain ou acesso direto
 - Extração, scoring e persistência são executados pela aplicação.
 - O provider Mock não envia conteúdo para terceiros; o Gemini envia currículo e vaga ao serviço externo quando habilitado.
 - Currículos contêm dados pessoais; logs não devem registrar texto integral nem conteúdo de arquivos.
+- `DELETE /api/resumes/{id}` permite apagar o currículo e todas as análises relacionadas.
 - O uso de IA externa exige consentimento explícito, política de retenção, tratamento de falhas e documentação do provedor.
 - Recomendações nunca devem inventar competências, experiências, cargos ou formação.
 
@@ -143,6 +158,7 @@ Não introduza dependências de infraestrutura na camada Domain ou acesso direto
 - **Score determinístico:** facilita testes e comparação de resultados.
 - **Cache por conteúdo e versão:** garante a mesma resposta persistida para a mesma entrada e invalidação explícita quando modelo, prompt ou regras mudarem.
 - **PostgreSQL:** prepara a persistência para evolução de esquema e ambientes compartilhados.
+- **Publicação privada inicial:** o container não implementa autenticação própria; o acesso deve ser restringido pela plataforma.
 - **Contratos por interface:** permite substituir persistência, extratores e provider sem alterar os casos de uso.
 - **API e frontend separados:** mantém as responsabilidades claras e permite implantação independente no futuro.
 
@@ -153,4 +169,5 @@ Não introduza dependências de infraestrutura na camada Domain ou acesso direto
 - Não há política automática de exclusão de currículos.
 - Não há migração automática de dados legados do SQLite para PostgreSQL.
 - A otimização automática de currículo ainda não está disponível.
-- Não há CI/CD, observabilidade estruturada ou testes de integração HTTP.
+- Não há CI/CD nem observabilidade estruturada completa.
+- Os testes HTTP usam banco isolado em memória; a migration PostgreSQL é validada separadamente e foi aplicada no ambiente local.

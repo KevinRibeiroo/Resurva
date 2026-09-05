@@ -1,0 +1,16 @@
+.git
+.github
+.vs
+.idea
+**/bin
+**/obj
+**/node_modules
+**/dist
+.artifacts
+*.db
+*.db-shm
+*.db-wal
+*.user
+*.log
+.env
+.env.*
