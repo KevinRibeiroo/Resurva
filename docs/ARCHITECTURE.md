@@ -128,7 +128,7 @@ A migration inicial cria o esquema PostgreSQL. A coluna do hash é anulável par
 - Chamadas ao Gemini possuem timeout configurável e uma nova tentativa por padrão.
 - Apenas timeout e falhas temporárias de rede, rate limit ou indisponibilidade são repetidos.
 - Erros do provider são convertidos em respostas HTTP `502`, `503` ou `504` conforme a causa.
-- A descrição da vaga aceita no máximo 50.000 caracteres.
+- A descrição da vaga aceita no máximo 75.000 caracteres.
 - O texto extraído do currículo aceita no máximo 200.000 caracteres.
 - Controllers da API compartilham um limite configurável de requisições; `/health` permanece fora desse limite.
 
