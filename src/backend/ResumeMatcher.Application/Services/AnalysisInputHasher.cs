@@ -13,10 +13,12 @@ public static partial class AnalysisInputHasher
         string resumeText,
         string jobDescription,
         string llmModel,
+        string llmConfigurationFingerprint,
         string promptVersion,
         string analysisRulesVersion)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(llmModel);
+        ArgumentException.ThrowIfNullOrWhiteSpace(llmConfigurationFingerprint);
         ArgumentException.ThrowIfNullOrWhiteSpace(promptVersion);
         ArgumentException.ThrowIfNullOrWhiteSpace(analysisRulesVersion);
 
@@ -25,6 +27,7 @@ public static partial class AnalysisInputHasher
             NormalizeForHash(resumeText),
             NormalizeForHash(jobDescription),
             llmModel.Trim(),
+            llmConfigurationFingerprint.Trim(),
             promptVersion.Trim(),
             analysisRulesVersion.Trim()
         });

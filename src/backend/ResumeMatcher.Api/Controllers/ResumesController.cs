@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using ResumeMatcher.Api;
 using ResumeMatcher.Application;
 
 namespace ResumeMatcher.Api.Controllers;
 
 [ApiController]
 [Route("api/resumes")]
+[EnableRateLimiting(ApiRateLimitOptions.PolicyName)]
 public sealed class ResumesController(IResumeService service) : ControllerBase
 {
     [HttpPost("upload")]
@@ -19,5 +22,11 @@ public sealed class ResumesController(IResumeService service) : ControllerBase
         {
             id = result.Id
         }, result);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        return await service.DeleteAsync(id, cancellationToken) ? NoContent() : NotFound();
     }
 }

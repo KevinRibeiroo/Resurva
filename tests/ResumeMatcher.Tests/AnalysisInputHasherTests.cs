@@ -53,6 +53,12 @@ public sealed class AnalysisInputHasherTests
     }
 
     [Fact]
+    public void DifferentLlmConfigurationProducesDifferentHash()
+    {
+        Assert.NotEqual(Generate(), Generate(configurationFingerprint: "temperature:0.2"));
+    }
+
+    [Fact]
     public void DifferentAnalysisRulesVersionProducesDifferentHash()
     {
         Assert.NotEqual(Generate(), Generate(rulesVersion: "v2"));
@@ -62,9 +68,16 @@ public sealed class AnalysisInputHasherTests
         string resumeText = ResumeText,
         string jobDescription = JobDescription,
         string model = "gemini-3.5-flash",
+        string configurationFingerprint = "temperature:0.1",
         string promptVersion = "v1",
         string rulesVersion = "v1")
     {
-        return AnalysisInputHasher.Generate(resumeText, jobDescription, model, promptVersion, rulesVersion);
+        return AnalysisInputHasher.Generate(
+            resumeText,
+            jobDescription,
+            model,
+            configurationFingerprint,
+            promptVersion,
+            rulesVersion);
     }
 }

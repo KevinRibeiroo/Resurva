@@ -28,3 +28,11 @@ Content-Type: application/json
 
 GET {{ResumeMatcher_Api_HostAddress}}/api/analysis/{{AnalysisId}}
 Accept: application/json
+
+### Excluir currículo e análises
+
+DELETE {{ResumeMatcher_Api_HostAddress}}/api/resumes/{{ResumeId}}
+
+### Health check
+
+GET {{ResumeMatcher_Api_HostAddress}}/health

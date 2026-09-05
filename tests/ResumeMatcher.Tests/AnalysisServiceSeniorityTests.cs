@@ -15,6 +15,11 @@ public sealed class AnalysisServiceSeniorityTests
         }
 
         public Task AddAsync(ResumeEntity entity, CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(resume.Id == id);
+        }
     }
 
     private sealed class FakeAnalysisRepository : IAnalysisRepository
@@ -41,6 +46,7 @@ public sealed class AnalysisServiceSeniorityTests
     private sealed class FakeLLMProvider(StructuredComparisonModel comparison) : ILLMProvider
     {
         public string ModelName => "test-model";
+        public string ConfigurationFingerprint => "default";
         public string PromptVersion => "v1";
 
         public Task<StructuredComparisonModel> CompareAsync(string resumeText, string jobDescription, CancellationToken cancellationToken)
