@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
+using Microsoft.Extensions.Options;
 using ResumeMatcher.Application;
 using ResumeMatcher.Domain;
 
@@ -57,16 +58,36 @@ public sealed class AnalysisCacheTests
         Assert.Equal(results[0].OverallScore, results[1].OverallScore);
     }
 
+    [Fact]
+    public async Task ChangingScoringRulesInvalidatesPersistedAnalysis()
+    {
+        var resume = CreateResume();
+        var analysisRepository = new FakeAnalysisRepository();
+        var llmProvider = new CountingLLMProvider();
+        var originalService = CreateService(resume, analysisRepository, llmProvider);
+        var changedRules = Options.Create(new ScoringOptions { PlenoRequiredJuniorScore = 55 });
+        var changedService = CreateService(resume, analysisRepository, llmProvider, changedRules);
+        var command = new CompareCommand(resume.Id, "Vaga backend com C# e .NET.");
+
+        await originalService.CompareAsync(command, CancellationToken.None);
+        await changedService.CompareAsync(command, CancellationToken.None);
+
+        Assert.Equal(2, llmProvider.CallCount);
+        Assert.Equal(2, analysisRepository.Count);
+    }
+
     private static AnalysisService CreateService(
         ResumeEntity resume,
         FakeAnalysisRepository analysisRepository,
-        CountingLLMProvider llmProvider)
+        CountingLLMProvider llmProvider,
+        IOptions<ScoringOptions>? scoringOptions = null)
     {
         return new AnalysisService(
             new FakeResumeRepository(resume),
             analysisRepository,
             llmProvider,
-            new FixedScoringEngine());
+            new FixedScoringEngine(),
+            scoringOptions);
     }
 
     private static ResumeEntity CreateResume()
@@ -83,6 +104,11 @@ public sealed class AnalysisCacheTests
     private sealed class FakeResumeRepository(ResumeEntity resume) : IResumeRepository
     {
         public Task AddAsync(ResumeEntity entity, CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(resume.Id == id);
+        }
 
         public Task<ResumeEntity?> GetAsync(Guid id, CancellationToken cancellationToken)
         {
@@ -120,6 +146,7 @@ public sealed class AnalysisCacheTests
 
         public int CallCount => _callCount;
         public string ModelName => "test-model";
+        public string ConfigurationFingerprint => "default";
         public string PromptVersion => "v1";
 
         public async Task<StructuredComparisonModel> CompareAsync(

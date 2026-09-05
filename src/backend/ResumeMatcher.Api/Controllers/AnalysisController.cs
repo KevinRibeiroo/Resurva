@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using ResumeMatcher.Api;
 using ResumeMatcher.Api.Models;
 using ResumeMatcher.Application;
 using ResumeMatcher.Domain;
@@ -6,7 +8,8 @@ using ResumeMatcher.Domain;
 namespace ResumeMatcher.Api.Controllers;
 
 [ApiController]
-[Route("api/analysis")] 
+[Route("api/analysis")]
+[EnableRateLimiting(ApiRateLimitOptions.PolicyName)]
 public sealed class AnalysisController(IAnalysisService service) : ControllerBase
 {
     [HttpPost("compare")]

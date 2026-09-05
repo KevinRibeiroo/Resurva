@@ -14,12 +14,14 @@ public sealed class GeminiLLMProvider : ILLMProvider
 
     private readonly GeminiOptions _options;
     private readonly Client _client;
+    private readonly GeminiRequestExecutor _requestExecutor;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
 
     public string ModelName => _options.Model;
+    public string ConfigurationFingerprint => FormattableString.Invariant($"temperature:{_options.Temperature}");
     public string PromptVersion => CurrentPromptVersion;
 
     private static string BuildSystemInstruction(string currentDate) => $"""
@@ -160,10 +162,11 @@ public sealed class GeminiLLMProvider : ILLMProvider
         }
         """;
 
-    public GeminiLLMProvider(IOptions<GeminiOptions> options)
+    public GeminiLLMProvider(IOptions<GeminiOptions> options, GeminiRequestExecutor requestExecutor)
     {
         _options = options.Value;
         _client = CreateClient(_options);
+        _requestExecutor = requestExecutor;
     }
 
     private static Client CreateClient(GeminiOptions options)
@@ -210,24 +213,34 @@ public sealed class GeminiLLMProvider : ILLMProvider
             ResponseJsonSchema = JsonNode.Parse(ResponseSchemaJson)
         };
 
-        var response = await _client.Models.GenerateContentAsync(
-            model: _options.Model,
-            contents: userPrompt,
-            config: config,
-            cancellationToken: cancellationToken);
+        var response = await _requestExecutor.ExecuteAsync(
+            requestCancellationToken => _client.Models.GenerateContentAsync(
+                model: _options.Model,
+                contents: userPrompt,
+                config: config,
+                cancellationToken: requestCancellationToken),
+            cancellationToken);
 
         var candidate = response.Candidates?.FirstOrDefault()
-            ?? throw new InvalidOperationException("Gemini returned no candidates in the response.");
+            ?? throw new LLMProviderResponseException("Gemini returned no candidates in the response.");
 
         var part = candidate.Content?.Parts?.FirstOrDefault()
-            ?? throw new InvalidOperationException("Gemini returned no content parts in candidate response.");
+            ?? throw new LLMProviderResponseException("Gemini returned no content parts in candidate response.");
 
         var rawJson = part.Text
-            ?? throw new InvalidOperationException("Gemini response content part contained empty text.");
+            ?? throw new LLMProviderResponseException("Gemini response content part contained empty text.");
 
-        var comparison = JsonSerializer.Deserialize<StructuredComparisonModel>(rawJson, JsonOptions)
-            ?? throw new InvalidOperationException("Failed to deserialize Gemini structured output into StructuredComparisonModel.");
+        StructuredComparisonModel? comparison;
+        try
+        {
+            comparison = JsonSerializer.Deserialize<StructuredComparisonModel>(rawJson, JsonOptions);
+        }
+        catch (JsonException exception)
+        {
+            throw new LLMProviderResponseException("Gemini returned invalid structured output.", exception);
+        }
 
-        return comparison;
+        return comparison
+            ?? throw new LLMProviderResponseException("Gemini returned empty structured output.");
     }
 }
