@@ -50,8 +50,10 @@ public sealed class ApiIntegrationTests
         Assert.Equal(1, await db.Analyses.CountAsync());
     }
 
-    [Fact]
-    public async Task CompareEndpointRejectsOversizedJobDescription()
+    [Theory]
+    [InlineData(75_000, HttpStatusCode.Created, 1)]
+    [InlineData(75_001, HttpStatusCode.BadRequest, 0)]
+    public async Task CompareEndpointEnforcesJobDescriptionLimit(int length, HttpStatusCode expectedStatus, int expectedLlmCalls)
     {
         await using var factory = new ResumeMatcherApiFactory();
         using var client = factory.CreateClient();
@@ -59,13 +61,13 @@ public sealed class ApiIntegrationTests
         var request = new
         {
             resumeId = resume.Id,
-            jobDescription = new string('x', 50_001)
+            jobDescription = new string('x', length)
         };
 
         var response = await client.PostAsJsonAsync("/api/analysis/compare", request);
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal(0, factory.LlmCallCount);
+        Assert.Equal(expectedStatus, response.StatusCode);
+        Assert.Equal(expectedLlmCalls, factory.LlmCallCount);
     }
 
     [Fact]
