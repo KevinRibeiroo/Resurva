@@ -18,6 +18,9 @@ public sealed class ApiExceptionMiddleware(RequestDelegate next, ILogger<ApiExce
                 ResourceNotFoundException => StatusCodes.Status404NotFound,
                 UnsupportedResumeFormatException => StatusCodes.Status415UnsupportedMediaType,
                 InvalidResumeException or ArgumentException => StatusCodes.Status400BadRequest,
+                LLMProviderResponseException => StatusCodes.Status502BadGateway,
+                LLMProviderUnavailableException => StatusCodes.Status503ServiceUnavailable,
+                LLMProviderTimeoutException => StatusCodes.Status504GatewayTimeout,
                 _ => StatusCodes.Status500InternalServerError
             };
             if (status >= 500)

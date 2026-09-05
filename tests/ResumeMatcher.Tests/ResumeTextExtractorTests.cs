@@ -72,6 +72,11 @@ public sealed class ResumeTextExtractorTests
         {
             return Task.FromResult<Domain.ResumeEntity?>(null);
         }
+
+        public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(false);
+        }
     }
 
     private static byte[] BuildMinimalPdf(string text)

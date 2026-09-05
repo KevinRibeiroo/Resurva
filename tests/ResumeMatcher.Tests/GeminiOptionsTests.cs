@@ -18,6 +18,9 @@ public sealed class GeminiOptionsTests
         Assert.Null(options.ProjectId);
         Assert.Equal("us-central1", options.Location);
         Assert.Equal(0.1, options.Temperature);
+        Assert.Equal(60, options.TimeoutSeconds);
+        Assert.Equal(1, options.MaxRetries);
+        Assert.Equal(500, options.RetryBaseDelayMilliseconds);
     }
 
     [Fact]
@@ -34,6 +37,7 @@ public sealed class GeminiOptionsTests
             .Build();
 
         var services = new ServiceCollection();
+        services.AddLogging();
         services.AddInfrastructure(config);
         using var provider = services.BuildServiceProvider();
 
@@ -53,6 +57,7 @@ public sealed class GeminiOptionsTests
             .Build();
 
         var services = new ServiceCollection();
+        services.AddLogging();
         services.AddInfrastructure(config);
         using var provider = services.BuildServiceProvider();
 

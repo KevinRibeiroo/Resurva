@@ -18,6 +18,14 @@
 
   <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.8" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="UglyToad.PdfPig" Version="1.7.0-custom-5" />
   </ItemGroup>
 
@@ -27,6 +35,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\backend\ResumeMatcher.Application\ResumeMatcher.Application.csproj" />
+    <ProjectReference Include="..\..\src\backend\ResumeMatcher.Api\ResumeMatcher.Api.csproj" />
     <ProjectReference Include="..\..\src\backend\ResumeMatcher.Infrastructure\ResumeMatcher.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\backend\ResumeMatcher.Domain\ResumeMatcher.Domain.csproj" />
   </ItemGroup>

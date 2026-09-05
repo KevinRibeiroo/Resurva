@@ -13,6 +13,9 @@ O ResumeMatcher compara currículos em PDF/DOCX com descrições de vagas. Ele a
 - `MockLLMProvider` é o padrão; `GeminiLLMProvider` pode ser habilitado por configuração.
 - A persistência usa PostgreSQL/Npgsql e migrations do Entity Framework Core.
 - Análises idênticas são reutilizadas pelo `AnalysisInputHash`; modelo, versão do prompt e versão das regras fazem parte da chave.
+- O fingerprint também inclui as configurações de scoring e a configuração relevante do provider para invalidar resultados quando o comportamento mudar.
+- A API possui `/health`, rate limiting, limites de entrada e exclusão em cascata de currículo/análises.
+- O Gemini possui timeout e uma única nova tentativa por padrão para falhas temporárias.
 - Não há autenticação, CI/CD nem implantação de produção.
 - Consulte `docs/ROADMAP.md` antes de afirmar que algo futuro já está disponível.
 
@@ -70,6 +73,8 @@ Não conclua mudanças com erros de build ou testes conhecidos sem descrevê-los
 - O proxy `/api` deve apontar para a porta `5080`.
 - A conexão PostgreSQL vem de `ConnectionStrings:ResumeMatcher`; credenciais locais devem ficar em variável de ambiente ou Secret Manager.
 - A API aplica migrations automaticamente ao iniciar.
+- `DELETE /api/resumes/{id}` remove o currículo e suas análises relacionadas.
+- O Dockerfile do backend usa a porta `8080`; a primeira publicação deve permanecer privada.
 - Pesos de scoring ficam em `appsettings.json` e devem somar `1`.
 
 ## Prioridades

@@ -15,6 +15,8 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 - [x] Resultado com evidências, lacunas, forças e recomendações.
 - [x] Validador inicial de segurança para otimizações.
 - [x] Testes unitários de extração, pontuação e segurança.
+- [x] Testes de integração do pipeline HTTP com dependências isoladas.
+- [x] Health check, rate limiting e container do backend.
 
 ## Próximos passos
 
@@ -23,14 +25,14 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 - [x] Aplicar integralmente a convenção de arquivos `Entity`, `Model` e interfaces `I...`.
 - [ ] Separar tipos públicos que ainda estejam agrupados em arquivos genéricos.
 - [ ] Adicionar análise estática, formatação e validações no build.
-- [ ] Criar testes de integração para os endpoints HTTP.
+- [x] Criar testes de integração para os endpoints HTTP.
 - [ ] Configurar CI para build e testes de backend e frontend.
 
 ### 2. Provider de IA real
 
 - [x] Implementar um provider real atrás de `ILLMProvider` (`GeminiLLMProvider`).
 - [x] Definir schema estruturado e validar toda resposta do modelo.
-- [ ] Configurar timeout, retry com limite e tratamento de indisponibilidade.
+- [x] Configurar timeout, retry com limite e tratamento de indisponibilidade.
 - [x] Armazenar chaves somente em Secret Manager ou variáveis de ambiente.
 - [ ] Informar ao usuário quando o currículo for enviado a um serviço externo.
 - [x] Manter o Mock disponível para desenvolvimento e testes.
@@ -40,6 +42,7 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 - [x] Substituir `EnsureCreatedAsync` por migrations do EF Core.
 - [ ] Planejar e executar a transferência de dados SQLite legados, caso precisem ser preservados.
 - [ ] Definir política de retenção e exclusão de currículos.
+- [x] Disponibilizar exclusão manual de currículo e análises relacionadas.
 - [ ] Evitar persistir texto integral quando ele não for necessário.
 - [ ] Implementar autenticação antes de armazenar dados de múltiplos usuários.
 - [ ] Definir proteção de dados, auditoria e estratégia de backup.
