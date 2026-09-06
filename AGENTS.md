@@ -16,7 +16,8 @@ O ResumeMatcher compara currículos em PDF/DOCX com descrições de vagas. Ele a
 - O fingerprint também inclui as configurações de scoring e a configuração relevante do provider para invalidar resultados quando o comportamento mudar.
 - A API possui `/health`, rate limiting, limites de entrada e exclusão em cascata de currículo/análises.
 - O Gemini possui timeout e uma única nova tentativa por padrão para falhas temporárias.
-- Não há autenticação, CI/CD nem implantação de produção.
+- O código possui login Google via Firebase Authentication, validação JWT na API e autorização para um único e-mail verificado configurado no backend. A ativação no Firebase e a transição do IAM do Cloud Run exigem o procedimento de `docs/AUTHENTICATION.md`.
+- Não há isolamento de dados entre usuários, acesso como visitante ou CI de testes configurado no repositório. O gatilho externo de deploy não substitui CI.
 - Consulte `docs/ROADMAP.md` antes de afirmar que algo futuro já está disponível.
 
 ## Arquitetura
@@ -72,9 +73,11 @@ Não conclua mudanças com erros de build ou testes conhecidos sem descrevê-los
 - Frontend Vite: `http://localhost:5173`.
 - O proxy `/api` deve apontar para a porta `5080`.
 - A conexão PostgreSQL vem de `ConnectionStrings:ResumeMatcher`; credenciais locais devem ficar em variável de ambiente ou Secret Manager.
+- Configure `Authentication:Firebase:ProjectId` e `Authentication:Firebase:AllowedEmail`; a API recusa iniciar sem a conta autorizada. Não crie bypass de autenticação no ambiente de desenvolvimento.
+- Todos os endpoints, inclusive `/health`, exigem o token Firebase da conta autorizada. O preflight CORS das origens permitidas é atendido antes da autenticação.
 - A API aplica migrations automaticamente ao iniciar.
 - `DELETE /api/resumes/{id}` remove o currículo e suas análises relacionadas.
-- O Dockerfile do backend usa a porta `8080`; a primeira publicação deve permanecer privada.
+- O Dockerfile do backend usa a porta `8080`; os dados da API devem permanecer restritos à conta autorizada. Só retire a barreira IAM após publicar e validar a proteção JWT na API, conforme `docs/AUTHENTICATION.md`.
 - Pesos de scoring ficam em `appsettings.json` e devem somar `1`.
 
 ## Prioridades
