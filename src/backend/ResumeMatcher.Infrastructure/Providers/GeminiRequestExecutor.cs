@@ -25,10 +25,23 @@ public sealed class GeminiRequestExecutor(
 
             try
             {
+                logger.LogInformation(
+                    "Iniciando chamada ao Gemini (tentativa {Attempt} de {TotalAttempts}, timeout: {Timeout}s)...",
+                    attempt + 1,
+                    _options.MaxRetries + 1,
+                    _options.TimeoutSeconds);
+
                 return await operation(timeoutSource.Token);
             }
             catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
             {
+                logger.LogError(
+                    exception,
+                    "Timeout na chamada ao Gemini após {Timeout}s na tentativa {Attempt} de {TotalAttempts}",
+                    _options.TimeoutSeconds,
+                    attempt + 1,
+                    _options.MaxRetries + 1);
+
                 if (attempt >= _options.MaxRetries)
                     throw new LLMProviderTimeoutException("The Gemini request timed out.", exception);
 
@@ -36,14 +49,37 @@ public sealed class GeminiRequestExecutor(
             }
             catch (Exception exception) when (IsTransient(exception))
             {
-                if (attempt >= _options.MaxRetries)
-                    throw new LLMProviderUnavailableException("Gemini is temporarily unavailable.", exception);
-
                 logger.LogWarning(
-                    "Transient Gemini failure. Retrying request after attempt {Attempt} of {TotalAttempts}",
+                    exception,
+                    "Falha transitória na chamada ao Gemini (tentativa {Attempt} de {TotalAttempts}): {ExceptionType} - {Message}. Causa interna: {InnerMessage}",
                     attempt + 1,
-                    _options.MaxRetries + 1);
+                    _options.MaxRetries + 1,
+                    exception.GetType().Name,
+                    exception.Message,
+                    exception.InnerException?.Message ?? "Nenhuma");
+
+                if (attempt >= _options.MaxRetries)
+                {
+                    logger.LogError(
+                        exception,
+                        "Tentativas de chamada ao Gemini esgotadas após {TotalAttempts} tentativas. Erro final: {Message}",
+                        _options.MaxRetries + 1,
+                        exception.Message);
+                    throw new LLMProviderUnavailableException($"Gemini is temporarily unavailable: {exception.Message}", exception);
+                }
+
                 await DelayBeforeRetryAsync(attempt, cancellationToken);
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(
+                    exception,
+                    "Falha permanente/não-transitória na chamada ao Gemini na tentativa {Attempt}: {ExceptionType} - {Message}. Causa interna: {InnerMessage}",
+                    attempt + 1,
+                    exception.GetType().Name,
+                    exception.Message,
+                    exception.InnerException?.Message ?? "Nenhuma");
+                throw;
             }
         }
     }
@@ -57,8 +93,21 @@ public sealed class GeminiRequestExecutor(
 
     private static bool IsTransient(Exception exception)
     {
-        if (exception is HttpRequestException)
+        if (exception is HttpRequestException httpException)
+        {
+            if (httpException.StatusCode.HasValue)
+            {
+                return httpException.StatusCode.Value is
+                    HttpStatusCode.RequestTimeout or
+                    HttpStatusCode.TooManyRequests or
+                    HttpStatusCode.InternalServerError or
+                    HttpStatusCode.BadGateway or
+                    HttpStatusCode.ServiceUnavailable or
+                    HttpStatusCode.GatewayTimeout;
+            }
+
             return true;
+        }
 
         return exception is GoogleApiException googleException && googleException.HttpStatusCode is
             HttpStatusCode.RequestTimeout or

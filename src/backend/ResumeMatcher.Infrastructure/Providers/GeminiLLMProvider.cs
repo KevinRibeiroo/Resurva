@@ -1,7 +1,10 @@
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Google.GenAI;
 using Google.GenAI.Types;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using ResumeMatcher.Application;
 using ResumeMatcher.Domain;
@@ -15,6 +18,7 @@ public sealed class GeminiLLMProvider : ILLMProvider
     private readonly GeminiOptions _options;
     private readonly Client _client;
     private readonly GeminiRequestExecutor _requestExecutor;
+    private readonly ILogger<GeminiLLMProvider> _logger;
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
@@ -162,11 +166,15 @@ public sealed class GeminiLLMProvider : ILLMProvider
         }
         """;
 
-    public GeminiLLMProvider(IOptions<GeminiOptions> options, GeminiRequestExecutor requestExecutor)
+    public GeminiLLMProvider(
+        IOptions<GeminiOptions> options,
+        GeminiRequestExecutor requestExecutor,
+        ILogger<GeminiLLMProvider>? logger = null)
     {
         _options = options.Value;
         _client = CreateClient(_options);
         _requestExecutor = requestExecutor;
+        _logger = logger ?? NullLogger<GeminiLLMProvider>.Instance;
     }
 
     private static Client CreateClient(GeminiOptions options)
@@ -213,6 +221,11 @@ public sealed class GeminiLLMProvider : ILLMProvider
             ResponseJsonSchema = JsonNode.Parse(ResponseSchemaJson)
         };
 
+        _logger.LogInformation(
+            "Preparando chamada ao Gemini para análise estruturada. Modelo: {Model}, Temperatura: {Temperature}, PromptVersion: {PromptVersion}. Tamanho do currículo: {ResumeLength} caracteres, vaga: {JobDescLength} caracteres",
+            _options.Model, _options.Temperature, PromptVersion, resumeText.Length, jobDescription.Length);
+
+        var stopwatch = Stopwatch.StartNew();
         var response = await _requestExecutor.ExecuteAsync(
             requestCancellationToken => _client.Models.GenerateContentAsync(
                 model: _options.Model,
@@ -220,6 +233,11 @@ public sealed class GeminiLLMProvider : ILLMProvider
                 config: config,
                 cancellationToken: requestCancellationToken),
             cancellationToken);
+        stopwatch.Stop();
+
+        _logger.LogInformation(
+            "Resposta da API do Gemini recebida com sucesso em {ElapsedMs}ms ({CandidateCount} candidatos retornados)",
+            stopwatch.ElapsedMilliseconds, response.Candidates?.Count ?? 0);
 
         var candidate = response.Candidates?.FirstOrDefault()
             ?? throw new LLMProviderResponseException("Gemini returned no candidates in the response.");
