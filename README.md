@@ -16,6 +16,7 @@ Aplicação web para comparar um currículo com uma descrição de vaga e aprese
 - Exclusão de currículo com remoção das análises relacionadas.
 - Health check do banco, limite de requisições e limites de entrada.
 - Interface web para upload e visualização da análise.
+- Login Google via Firebase Authentication, com acesso restrito a uma conta autorizada na API.
 - Validação de segurança para impedir sugestões que adicionem informações não confirmadas.
 
 ## Tecnologias
@@ -96,6 +97,8 @@ dotnet run --project src/backend/ResumeMatcher.Api
 
 A API inicia em `http://localhost:5080` usando o perfil HTTP do projeto. As migrations do Entity Framework são aplicadas automaticamente na inicialização. A configuração versionada não contém senha; informe credenciais por variável de ambiente ou Secret Manager.
 
+Antes de iniciar, configure também `Authentication:Firebase:AllowedEmail` com sua conta Google verificada. A API exige autenticação inclusive localmente. Consulte [Autenticação e ativação](docs/AUTHENTICATION.md) para configurar o login no frontend, testar e ativar no Cloud Run.
+
 Essa mudança cria o esquema no PostgreSQL, mas não copia automaticamente dados de um arquivo SQLite antigo. Se houver dados locais que precisem ser preservados, faça uma migração de dados antes de remover o banco anterior.
 
 ### 2. Frontend
@@ -119,6 +122,9 @@ Abra `http://localhost:5173`. Durante o desenvolvimento, o Vite encaminha chamad
 | `POST` | `/api/analysis/compare` | Compara o currículo enviado com uma descrição de vaga. |
 | `GET` | `/api/analysis/{id}` | Recupera uma análise persistida pelo identificador. |
 | `GET` | `/health` | Verifica a disponibilidade da API e do PostgreSQL. |
+| `GET` | `/api/auth/session` | Valida o acesso da conta conectada; retorna `204` se autorizada. |
+
+Os endpoints exigem `Authorization: Bearer <ID_TOKEN_FIREBASE>`. Token ausente ou inválido retorna `401`; uma identidade válida que não pertence à conta autorizada retorna `403`.
 
 Exemplo do corpo para comparação:
 
@@ -143,6 +149,8 @@ As configurações principais ficam em `src/backend/ResumeMatcher.Api/appsetting
 - `RateLimiting`: limite de requisições por janela nos controllers da API.
 - `Scoring`: pesos das cinco dimensões; a soma deve ser igual a `1`.
 - `Cors:Origins`: origens autorizadas a acessar a API.
+- `Authentication:Firebase:ProjectId`: projeto emissor dos tokens Firebase.
+- `Authentication:Firebase:AllowedEmail`: única conta Google verificada autorizada neste ambiente privado.
 
 Não versione chaves, tokens ou credenciais. Configure `ConnectionStrings__ResumeMatcher`, `LLM__ApiKey` e demais segredos por variáveis de ambiente ou pelo Secret Manager do .NET.
 
@@ -158,9 +166,9 @@ O backend possui um Dockerfile preparado para escutar na porta `8080`:
 docker build -f src/backend/ResumeMatcher.Api/Dockerfile -t resumematcher-api .
 ```
 
-Para o primeiro ambiente de testes, publique a API sem acesso anônimo e forneça connection string e chave do Gemini por um gerenciador de segredos. Consulte [Publicação privada](docs/DEPLOYMENT.md).
+Forneça connection string e chave do Gemini por um gerenciador de segredos. A API protege os dados com autenticação JWT e autorização para uma única conta; a transição da barreira IAM deve seguir [Publicação privada](docs/DEPLOYMENT.md) e [Autenticação](docs/AUTHENTICATION.md).
 
-O frontend possui configuração para [Firebase Hosting](docs/FRONTEND_HOSTING.md), com publicação de `src/frontend/dist`. A integração pelo navegador com a API privada ainda depende da estratégia de autenticação e CORS descrita nesse guia.
+O frontend possui configuração para [Firebase Hosting](docs/FRONTEND_HOSTING.md), com publicação de `src/frontend/dist` e login Google. A ativação do provider no painel e a publicação da API protegida são necessárias para completar o fluxo no navegador.
 
 ## Compilar e testar
 
@@ -179,6 +187,7 @@ pnpm build
 - [Estado atual e roadmap](docs/ROADMAP.md)
 - [Publicação privada e configuração](docs/DEPLOYMENT.md)
 - [Contexto para manutenção e continuidade](AGENTS.md)
+- [Autenticação Google e ativação no Cloud Run](docs/AUTHENTICATION.md)
 
 ## Uso responsável
 

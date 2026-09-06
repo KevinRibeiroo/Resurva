@@ -20,6 +20,10 @@ textarea { resize: vertical; }
 button { border: 0; border-radius: 7px; padding: 13px 18px; background: #176b4d; color: white; font: inherit; font-weight: 700; cursor: pointer; }
 button:disabled { opacity: .55; cursor: not-allowed; }
 .error { padding: 12px; color: #991b1b; background: #fee2e2; border-radius: 7px; }
+.login-panel { background: white; padding: 28px; border: 1px solid #dce2e8; border-radius: 12px; }
+.login-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.session-bar { width: min(1080px, calc(100% - 32px)); margin: 20px auto 0; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; overflow-wrap: anywhere; }
+.session-error { width: min(1080px, calc(100% - 32px)); margin-inline: auto; }
 .results { margin-top: 24px; }.overall { display: flex; align-items: baseline; gap: 7px; }.overall strong { color: #176b4d; font-size: 4rem; margin-left: auto; }
 .breakdown { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; border-block: 1px solid #e5e9ee; padding: 22px 0; margin: 16px 0 24px; }
 .score { display: grid; gap: 6px; }.score strong { font-size: 1.5rem; }.score progress { width: 100%; accent-color: #176b4d; }

@@ -17,6 +17,8 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 - [x] Testes unitários de extração, pontuação e segurança.
 - [x] Testes de integração do pipeline HTTP com dependências isoladas.
 - [x] Health check, rate limiting e container do backend.
+- [x] Login Google no frontend e validação JWT Firebase na API com autorização de uma conta.
+- [ ] Concluir ativação do Firebase Authentication e validar o login real após publicar o backend protegido.
 
 ## Próximos passos
 
@@ -25,6 +27,7 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 - [x] Aplicar integralmente a convenção de arquivos `Entity`, `Model` e interfaces `I...`.
 - [ ] Separar tipos públicos que ainda estejam agrupados em arquivos genéricos.
 - [ ] Adicionar análise estática, formatação e validações no build.
+- [ ] Atualizar o Vite: auditoria de 06/09/2026 apontou seis alertas (três altos, três moderados) na versão 7.1.7 já existente. O frontend publicado é estático; não exponha o servidor de desenvolvimento.
 - [x] Criar testes de integração para os endpoints HTTP.
 - [ ] Configurar CI para build e testes de backend e frontend.
 
@@ -44,7 +47,8 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 - [ ] Definir política de retenção e exclusão de currículos.
 - [x] Disponibilizar exclusão manual de currículo e análises relacionadas.
 - [ ] Evitar persistir texto integral quando ele não for necessário.
-- [ ] Implementar autenticação antes de armazenar dados de múltiplos usuários.
+- [x] Implementar autenticação para o ambiente privado de um usuário.
+- [ ] Implementar propriedade de currículos/análises e isolamento de consultas, exclusão e cache antes de aceitar múltiplos usuários.
 - [ ] Definir proteção de dados, auditoria e estratégia de backup.
 
 ### 4. Experiência do usuário
@@ -64,6 +68,8 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 - [ ] Exportar uma versão revisada em formato apropriado.
 
 ## Planos futuros
+
+- [ ] Permitir comparação como visitante, com limites de uso/custo, proteção contra abuso e retenção definidos com o responsável antes da implementação. Não há quota anônima nem valor pré-definido nesta etapa.
 
 - [ ] Suporte a mais idiomas.
 - [ ] Comparação de um currículo com várias vagas.

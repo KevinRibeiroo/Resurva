@@ -8,15 +8,15 @@
     "build": "tsc -b && vite build"
   },
   "dependencies": {
+    "@types/react": "19.1.16",
+    "@types/react-dom": "19.1.9",
     "@vitejs/plugin-react": "5.0.4",
-    "vite": "7.1.7",
-    "typescript": "5.9.2",
+    "firebase": "12.18.0",
     "react": "19.1.1",
     "react-dom": "19.1.1",
-    "@types/react": "19.1.16",
-    "@types/react-dom": "19.1.9"
+    "typescript": "5.9.2",
+    "vite": "7.1.7"
   },
-  "devDependencies": {},
   "engines": {
     "node": ">=20.19"
   }
