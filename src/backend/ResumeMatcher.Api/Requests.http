@@ -1,10 +1,18 @@
 @ResumeMatcher_Api_HostAddress = http://localhost:5080
 @ResumeId = 00000000-0000-0000-0000-000000000000
 @AnalysisId = 00000000-0000-0000-0000-000000000000
+# Defina FirebaseIdToken em configuração local não versionada do seu cliente HTTP.
+# Use um ID token Firebase, não o token IAM gerado pelo gcloud.
+
+### Validar a sessão
+
+GET {{ResumeMatcher_Api_HostAddress}}/api/auth/session
+Authorization: Bearer {{FirebaseIdToken}}
 
 ### Enviar currículo
 
 POST {{ResumeMatcher_Api_HostAddress}}/api/resumes/upload
+Authorization: Bearer {{FirebaseIdToken}}
 Content-Type: multipart/form-data; boundary=ResumeMatcherBoundary
 
 --ResumeMatcherBoundary
@@ -17,6 +25,7 @@ Content-Type: application/pdf
 ### Comparar currículo com uma vaga
 
 POST {{ResumeMatcher_Api_HostAddress}}/api/analysis/compare
+Authorization: Bearer {{FirebaseIdToken}}
 Content-Type: application/json
 
 {
@@ -27,12 +36,15 @@ Content-Type: application/json
 ### Consultar uma análise
 
 GET {{ResumeMatcher_Api_HostAddress}}/api/analysis/{{AnalysisId}}
+Authorization: Bearer {{FirebaseIdToken}}
 Accept: application/json
 
 ### Excluir currículo e análises
 
 DELETE {{ResumeMatcher_Api_HostAddress}}/api/resumes/{{ResumeId}}
+Authorization: Bearer {{FirebaseIdToken}}
 
 ### Health check
 
 GET {{ResumeMatcher_Api_HostAddress}}/health
+Authorization: Bearer {{FirebaseIdToken}}

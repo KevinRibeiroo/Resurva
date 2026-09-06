@@ -8,6 +8,7 @@ using ResumeMatcher.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddProblemDetails();
 builder.Services.AddControllers();
+builder.Services.AddFirebaseAuthentication(builder.Configuration);
 builder.Services.Configure<ScoringOptions>(builder.Configuration.GetSection(ScoringOptions.SectionName));
 builder.Services.AddScoped<IScoringEngine, WeightedScoringEngine>();
 builder.Services.AddScoped<IResumeService, ResumeService>();
@@ -43,6 +44,8 @@ var app = builder.Build();
 
 app.UseMiddleware<ApiExceptionMiddleware>();
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseRateLimiter();
 app.MapControllers();
 app.MapHealthChecks("/health");
