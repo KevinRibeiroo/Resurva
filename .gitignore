@@ -11,3 +11,8 @@
 *.csproj.user
 *.tsbuildinfo
 package-lock.json
+**/.firebase/
+**/.pnpm-store/
+firebase-debug.log*
+src/frontend/.env.local
+src/frontend/.env.*.local
