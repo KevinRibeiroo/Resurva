@@ -39,12 +39,19 @@ public sealed class WeightedScoringEngine : IScoringEngine
     }
 }
 
-public sealed class ResumeService(IEnumerable<IResumeTextExtractor> extractors, IResumeRepository repository) : IResumeService
+public sealed class ResumeService(
+    IEnumerable<IResumeTextExtractor> extractors,
+    IResumeRepository repository,
+    ILogger<ResumeService>? logger = null) : IResumeService
 {
+    private readonly ILogger<ResumeService> _logger = logger ?? NullLogger<ResumeService>.Instance;
     private const long MaxFileSize = 10 * 1024 * 1024;
 
     public async Task<UploadResumeResultModel> UploadAsync(UploadResumeCommand command, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Iniciando processamento de upload do currículo '{FileName}' ({ContentType})",
+            command.FileName, command.ContentType);
+
         if (!command.Content.CanRead)
             throw new InvalidResumeException("The uploaded file cannot be read.");
         if (command.Content.CanSeek && command.Content.Length > MaxFileSize)
@@ -53,23 +60,35 @@ public sealed class ResumeService(IEnumerable<IResumeTextExtractor> extractors, 
         var extension = Path.GetExtension(command.FileName).ToLowerInvariant();
         var extractor = extractors.FirstOrDefault(x => x.CanExtract(extension, command.ContentType))
             ?? throw new UnsupportedResumeFormatException("Only PDF and DOCX files are supported.");
+
+        _logger.LogInformation("Extraindo texto do currículo '{FileName}' usando extrator {Extractor}",
+            command.FileName, extractor.GetType().Name);
+
         var text = (await extractor.ExtractAsync(command.Content, cancellationToken)).Trim();
         if (string.IsNullOrWhiteSpace(text))
             throw new InvalidResumeException("No text could be extracted from the resume.");
         if (text.Length > AnalysisConstraints.MaxExtractedResumeTextLength)
             throw new InvalidResumeException($"The extracted resume text exceeds the {AnalysisConstraints.MaxExtractedResumeTextLength} character limit.");
 
+        _logger.LogInformation("Texto extraído com sucesso do currículo '{FileName}' ({CharCount} caracteres). Persistindo entidade...",
+            command.FileName, text.Length);
+
         var resume = new ResumeEntity { FileName = Path.GetFileName(command.FileName), ContentType = command.ContentType, ExtractedText = text };
         await repository.AddAsync(resume, cancellationToken);
+
+        _logger.LogInformation("Currículo '{FileName}' persistido com ID {ResumeId}", resume.FileName, resume.Id);
         return new(resume.Id, resume.FileName, text.Length);
     }
 
-    public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("Resume id is required.");
 
-        return repository.DeleteAsync(id, cancellationToken);
+        _logger.LogInformation("Iniciando exclusão do currículo {ResumeId} no repositório", id);
+        var deleted = await repository.DeleteAsync(id, cancellationToken);
+        _logger.LogInformation("Exclusão do currículo {ResumeId} finalizada. Sucesso: {Deleted}", id, deleted);
+        return deleted;
     }
 }
 
@@ -145,7 +164,11 @@ public sealed class AnalysisService(
             return cachedResult;
         }
 
-        _logger.LogInformation("Calling LLM for new analysis with hash {Hash}", analysisInputHash);
+        _logger.LogInformation(
+            "Chamando provider {Provider} (Modelo: {Model}) para nova análise com hash {Hash}",
+            llmProvider.GetType().Name,
+            llmProvider.ModelName,
+            analysisInputHash);
         var comparison = await llmProvider.CompareAsync(resume.ExtractedText, jobDescription, cancellationToken);
         var skills = Ratio(comparison.MatchedSkills.Count, comparison.MissingSkills.Count);
         var requirements = Ratio(comparison.RequirementsMet.Count, comparison.RequirementsMissing.Count);
