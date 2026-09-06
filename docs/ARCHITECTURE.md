@@ -58,6 +58,7 @@ Implementa os contratos da camada Application:
 - registrar dependências e configurações;
 - expor controllers REST;
 - aplicar CORS e tratamento centralizado de exceções;
+- autenticar ID tokens Firebase (JWT RS256) e autorizar somente a conta Google verificada configurada;
 - aplicar rate limiting e limites de entrada;
 - expor `/health` com verificação do banco;
 - aplicar migrations do EF Core no PostgreSQL durante a inicialização.
@@ -65,6 +66,10 @@ Implementa os contratos da camada Application:
 ### Frontend
 
 Aplicação React criada com Vite. Ela envia o currículo, solicita a comparação e apresenta o score geral, o detalhamento e as evidências retornadas pela API.
+
+O `AuthGate` exige login Google pelo SDK Firebase e consulta `GET /api/auth/session` antes de exibir o formulário. Cada chamada obtém um ID token pelo SDK e o envia no header `Authorization`. A autorização efetiva fica na API, não no componente visual. As chaves públicas para validar a assinatura são descobertas via OIDC do Firebase e gerenciadas pelo middleware JWT do ASP.NET Core.
+
+A política padrão e a política de fallback da API exigem assinatura, emissor, audiência e validade corretos, além de e-mail verificado, provider `google.com` e correspondência com um único `AllowedEmail` configurado. Uma configuração vazia impede a inicialização. O CORS é executado antes de autenticação e autorização para permitir o preflight das origens explicitamente cadastradas.
 
 ## Fluxo principal
 
@@ -158,14 +163,15 @@ Não introduza dependências de infraestrutura na camada Domain ou acesso direto
 - **Score determinístico:** facilita testes e comparação de resultados.
 - **Cache por conteúdo e versão:** garante a mesma resposta persistida para a mesma entrada e invalidação explícita quando modelo, prompt ou regras mudarem.
 - **PostgreSQL:** prepara a persistência para evolução de esquema e ambientes compartilhados.
-- **Publicação privada inicial:** o container não implementa autenticação própria; o acesso deve ser restringido pela plataforma.
+- **Publicação privada inicial:** os dados ficam restritos à conta autorizada pela API; o procedimento para substituir a barreira IAM por autenticação de usuário está em `AUTHENTICATION.md`.
 - **Contratos por interface:** permite substituir persistência, extratores e provider sem alterar os casos de uso.
 - **API e frontend separados:** mantém as responsabilidades claras e permite implantação independente no futuro.
 
 ## Limitações conhecidas
 
 - O vocabulário de skills do Mock é fixo.
-- Não há autenticação nem separação de dados por usuário.
+- Não há separação de dados por usuário: a autorização é limitada a uma única conta. Não amplie para uma lista de usuários antes de implementar ownership e isolamento do cache.
+- Revogação de sessão e desativação de conta no Firebase não são consultadas a cada requisição; um token já emitido pode continuar válido até expirar. A lista de acesso efetiva continua sendo a conta configurada na API.
 - Não há política automática de exclusão de currículos.
 - Não há migração automática de dados legados do SQLite para PostgreSQL.
 - A otimização automática de currículo ainda não está disponível.

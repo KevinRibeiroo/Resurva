@@ -14,7 +14,7 @@ public sealed class ApiIntegrationTests
     public async Task HealthEndpointReturnsOk()
     {
         await using var factory = new ResumeMatcherApiFactory();
-        using var client = factory.CreateClient();
+        using var client = factory.CreateAuthenticatedClient();
 
         var response = await client.GetAsync("/health");
 
@@ -25,7 +25,7 @@ public sealed class ApiIntegrationTests
     public async Task CompareEndpointPersistsAndReusesIdenticalAnalysis()
     {
         await using var factory = new ResumeMatcherApiFactory();
-        using var client = factory.CreateClient();
+        using var client = factory.CreateAuthenticatedClient();
         var resume = await SeedResumeAsync(factory.Services);
         var request = new
         {
@@ -56,7 +56,7 @@ public sealed class ApiIntegrationTests
     public async Task CompareEndpointEnforcesJobDescriptionLimit(int length, HttpStatusCode expectedStatus, int expectedLlmCalls)
     {
         await using var factory = new ResumeMatcherApiFactory();
-        using var client = factory.CreateClient();
+        using var client = factory.CreateAuthenticatedClient();
         var resume = await SeedResumeAsync(factory.Services);
         var request = new
         {
@@ -74,7 +74,7 @@ public sealed class ApiIntegrationTests
     public async Task ApiRateLimitRejectsRequestsAboveConfiguredWindowLimit()
     {
         await using var factory = new ResumeMatcherApiFactory();
-        using var client = factory.CreateClient();
+        using var client = factory.CreateAuthenticatedClient();
 
         for (var requestNumber = 0; requestNumber < 20; requestNumber++)
         {
@@ -91,7 +91,7 @@ public sealed class ApiIntegrationTests
     public async Task DeleteResumeRemovesItsPersistedAnalyses()
     {
         await using var factory = new ResumeMatcherApiFactory();
-        using var client = factory.CreateClient();
+        using var client = factory.CreateAuthenticatedClient();
         var resume = await SeedResumeAsync(factory.Services);
         var compareResponse = await client.PostAsJsonAsync("/api/analysis/compare", new
         {

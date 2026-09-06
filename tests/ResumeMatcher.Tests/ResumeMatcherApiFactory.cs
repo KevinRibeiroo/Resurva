@@ -3,6 +3,14 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http.Headers;
+using System.Security.Cryptography;
+using ResumeMatcher.Api;
 using ResumeMatcher.Application;
 using ResumeMatcher.Domain;
 using ResumeMatcher.Infrastructure;
@@ -11,16 +19,62 @@ namespace ResumeMatcher.Tests;
 
 public sealed class ResumeMatcherApiFactory : WebApplicationFactory<Program>
 {
+    public const string FirebaseProjectId = "resume-tests";
+    public const string AllowedEmail = "owner@example.test";
+    private static readonly RsaSecurityKey SigningKey = new(RSA.Create(2048)) { KeyId = "test-signing-key" };
+    private static readonly RsaSecurityKey OtherSigningKey = new(RSA.Create(2048)) { KeyId = "test-signing-key" };
     private readonly string _databaseName = $"resume-matcher-tests-{Guid.NewGuid():N}";
     private readonly CountingLLMProvider _llmProvider = new();
 
     public int LlmCallCount => _llmProvider.CallCount;
+
+    public HttpClient CreateAuthenticatedClient()
+    {
+        var client = CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CreateToken());
+        return client;
+    }
+
+    public static string CreateToken(string email = AllowedEmail, bool verified = true,
+        string? issuer = null, string? audience = null, bool expired = false,
+        bool validSignature = true, string provider = "google.com", bool futureAuth = false, bool emptySubject = false)
+    {
+        var now = DateTime.UtcNow;
+        var issuedAt = expired ? now.AddHours(-2) : now.AddMinutes(-1);
+        var payload = new JwtPayload(
+            issuer ?? $"https://securetoken.google.com/{FirebaseProjectId}",
+            audience ?? FirebaseProjectId, null, issuedAt,
+            expired ? now.AddHours(-1) : now.AddHours(1), issuedAt)
+        {
+            ["sub"] = emptySubject ? "" : "synthetic-owner-uid",
+            ["email"] = email,
+            ["email_verified"] = verified,
+            ["auth_time"] = new DateTimeOffset(futureAuth ? now.AddHours(1) : issuedAt).ToUnixTimeSeconds(),
+            ["firebase"] = new Dictionary<string, object> { ["sign_in_provider"] = provider }
+        };
+        var header = new JwtHeader(new SigningCredentials(validSignature ? SigningKey : OtherSigningKey, SecurityAlgorithms.RsaSha256));
+        return new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(header, payload));
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
         builder.ConfigureServices(services =>
         {
+            services.Configure<FirebaseAuthOptions>(options =>
+            {
+                options.ProjectId = FirebaseProjectId;
+                options.AllowedEmail = AllowedEmail;
+            });
+            services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
+            {
+                var configuration = new OpenIdConnectConfiguration
+                {
+                    Issuer = $"https://securetoken.google.com/{FirebaseProjectId}"
+                };
+                configuration.SigningKeys.Add(SigningKey);
+                options.ConfigurationManager = new StaticConfigurationManager<OpenIdConnectConfiguration>(configuration);
+            });
             services.RemoveAll<DbContextOptions<ResumeMatcherDbContext>>();
             services.RemoveAll<ResumeMatcherDbContext>();
             services.AddDbContext<ResumeMatcherDbContext>(options => options.UseInMemoryDatabase(_databaseName));
