@@ -160,6 +160,8 @@ docker build -f src/backend/ResumeMatcher.Api/Dockerfile -t resumematcher-api .
 
 Para o primeiro ambiente de testes, publique a API sem acesso anônimo e forneça connection string e chave do Gemini por um gerenciador de segredos. Consulte [Publicação privada](docs/DEPLOYMENT.md).
 
+O frontend possui configuração para [Firebase Hosting](docs/FRONTEND_HOSTING.md), com publicação de `src/frontend/dist`. A integração pelo navegador com a API privada ainda depende da estratégia de autenticação e CORS descrita nesse guia.
+
 ## Compilar e testar
 
 ```powershell
