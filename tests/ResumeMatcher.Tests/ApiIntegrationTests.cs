@@ -114,6 +114,7 @@ public sealed class ApiIntegrationTests
         var db = scope.ServiceProvider.GetRequiredService<ResumeMatcherDbContext>();
         var resume = new ResumeEntity
         {
+            OwnerUserId = "synthetic-owner-uid",
             FileName = "integration-test.pdf",
             ContentType = "application/pdf",
             ExtractedText = "Desenvolvedor backend com experiência em C# e APIs."

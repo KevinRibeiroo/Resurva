@@ -37,26 +37,25 @@ public static class FirebaseAuthenticationExtensions
                     OnAuthenticationFailed = context =>
                     {
                         var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("FirebaseAuthentication");
-                        logger.LogWarning(context.Exception, "Falha na validação do token JWT Firebase: {Reason}", context.Exception.Message);
+                        logger.LogWarning("Falha na validação do token JWT Firebase");
                         return Task.CompletedTask;
                     },
                     OnTokenValidated = context =>
                     {
                         var subject = context.Principal?.FindFirst("sub")?.Value;
-                        var email = context.Principal?.FindFirst("email")?.Value;
                         var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                         if (string.IsNullOrWhiteSpace(subject) || subject.Length > 128 ||
                             !long.TryParse(context.Principal?.FindFirst("iat")?.Value, out var issuedAt) || issuedAt > now ||
                             !long.TryParse(context.Principal?.FindFirst("auth_time")?.Value, out var authenticatedAt) || authenticatedAt > now)
                         {
                             var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("FirebaseAuthentication");
-                            logger.LogWarning("Token Firebase com claims temporais ou subject inválidos para o e-mail {Email}", email);
+                            logger.LogWarning("Token Firebase com claims temporais ou subject inválidos");
                             context.Fail("Invalid Firebase token claims.");
                             return Task.CompletedTask;
                         }
 
                         var successLogger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("FirebaseAuthentication");
-                        successLogger.LogInformation("Token Firebase validado com sucesso para {Email} (sub: {Subject})", email, subject);
+                        successLogger.LogInformation("Token Firebase validado com sucesso");
                         return Task.CompletedTask;
                     }
                 };

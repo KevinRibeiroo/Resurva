@@ -66,8 +66,14 @@ Depois da publicação:
 
 ## Limites desta fase
 
-- O login Google e a autorização de uma conta estão implementados; cadastro multiusuário, isolamento de dados e acesso como visitante não estão disponíveis.
+- O login Google, autorização de uma conta e isolamento por UID estão implementados; cadastro multiusuário e acesso como visitante não estão disponíveis.
 - Não remova o IAM antes de publicar e validar a revisão que exige JWT Firebase na aplicação.
 - Não use dados de terceiros sem consentimento.
 - Não existe transferência automática de dados SQLite legados.
-- Backup, retenção automática e auditoria continuam como próximos passos.
+- Expiração de 30 dias e comando de limpeza implementados; agendamento, backups e auditoria operacional pendentes. Leia [Privacidade](DATA_PRIVACY.md).
+
+## Antes de publicar ownership e retenção
+
+A migration `AddDataOwnershipAndRetention` torna registros antigos inacessíveis até atribuir seu dono. Como a API aplica migrations ao iniciar, planeje a janela e a [atribuição dos dados](DATA_PRIVACY.md) antes do merge que aciona deploy. Não execute limpeza antes dessa revisão e não reverta para uma API antiga com consultas globais.
+
+O [CI](CI.md) não modifica o gatilho Cloud Build. Ative checks obrigatórios e restrinja push direto/bypass na develop para impedir publicação de alterações não validadas.

@@ -6,8 +6,20 @@ using ResumeMatcher.Api;
 using ResumeMatcher.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+if (args.Contains("--purge-expired", StringComparer.Ordinal))
+{
+    builder.Services.AddInfrastructure(builder.Configuration);
+    await using var maintenance = builder.Build();
+    await using var scope = maintenance.Services.CreateAsyncScope();
+    var deleted = await scope.ServiceProvider.GetRequiredService<RetentionCleanupService>()
+        .PurgeExpiredAsync(CancellationToken.None);
+    maintenance.Logger.LogInformation("Retenção: {DeletedCount} registros expirados removidos", deleted);
+    return;
+}
 builder.Services.AddProblemDetails();
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddFirebaseAuthentication(builder.Configuration);
 builder.Services.Configure<ScoringOptions>(builder.Configuration.GetSection(ScoringOptions.SectionName));
 builder.Services.AddScoped<IScoringEngine, WeightedScoringEngine>();
