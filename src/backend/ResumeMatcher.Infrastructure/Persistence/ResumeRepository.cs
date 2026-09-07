@@ -29,6 +29,8 @@ internal sealed class ResumeRepository(ResumeMatcherDbContext db, ICurrentUser c
         if (resume is null)
             return false;
 
+        var optimizations = await db.Optimizations.Where(x => x.ResumeId == id && x.OwnerUserId == owner).ToListAsync(cancellationToken);
+        db.Optimizations.RemoveRange(optimizations);
         var analyses = await db.Analyses.Where(x => x.ResumeId == id && x.OwnerUserId == owner).ToListAsync(cancellationToken);
         db.Analyses.RemoveRange(analyses);
         db.Resumes.Remove(resume);

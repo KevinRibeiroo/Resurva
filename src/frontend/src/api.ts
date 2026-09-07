@@ -40,3 +40,27 @@ export async function compareResume(resumeId: string, jobDescription: string): P
     body: JSON.stringify({ resumeId, jobDescription })
   }))
 }
+
+export async function createOptimizationPlan(analysisId: string): Promise<import('./types').OptimizationPlan> {
+  return parse(await authenticatedFetch(`/api/analysis/${analysisId}/optimization`, {
+    method: 'POST'
+  }))
+}
+
+export async function getOptimizationPlan(id: string): Promise<import('./types').OptimizationPlan> {
+  return parse(await authenticatedFetch(`/api/optimizations/${id}`, {
+    method: 'GET'
+  }))
+}
+
+export async function applyOptimization(
+  id: string,
+  version: number,
+  decisions: import('./types').OptimizationDecision[]
+): Promise<import('./types').OptimizationResult> {
+  return parse(await authenticatedFetch(`/api/optimizations/${id}/apply`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ version, decisions })
+  }))
+}
