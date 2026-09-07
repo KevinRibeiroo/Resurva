@@ -20,14 +20,12 @@ public sealed class ResumesController(
         if (file.Length == 0)
             throw new InvalidResumeException("The uploaded file is empty.");
 
-        logger.LogInformation("Recebido arquivo de currículo '{FileName}' ({Length} bytes, content-type: '{ContentType}')",
-            file.FileName, file.Length, file.ContentType);
+        logger.LogInformation("Recebido arquivo de currículo ({Length} bytes)", file.Length);
 
         await using var stream = file.OpenReadStream();
         var result = await service.UploadAsync(new(file.FileName, file.ContentType, stream), cancellationToken);
 
-        logger.LogInformation("Currículo '{FileName}' processado e persistido com ID {ResumeId}",
-            file.FileName, result.Id);
+        logger.LogInformation("Currículo processado e persistido com ID {ResumeId}", result.Id);
 
         return CreatedAtAction(nameof(Upload), new
         {

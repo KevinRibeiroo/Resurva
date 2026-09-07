@@ -12,8 +12,7 @@ public sealed class AuthController(ILogger<AuthController> logger) : ControllerB
     [HttpGet("session")]
     public IActionResult Session()
     {
-        var email = User.FindFirst("email")?.Value;
-        logger.LogInformation("Sessão ativa verificada para o usuário autenticado '{Email}'", email);
+        logger.LogInformation("Sessão ativa verificada para usuário autenticado");
         return NoContent();
     }
 }

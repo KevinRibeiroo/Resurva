@@ -2,6 +2,7 @@ namespace ResumeMatcher.Domain;
 
 public sealed class AnalysisEntity
 {
+    public string OwnerUserId { get; init; } = "";
     public Guid Id { get; init; } = Guid.NewGuid();
     public Guid ResumeId { get; init; }
     public string? AnalysisInputHash { get; init; }
@@ -14,4 +15,5 @@ public sealed class AnalysisEntity
     public double EducationScore { get; init; }
     public required string ResultJson { get; init; }
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

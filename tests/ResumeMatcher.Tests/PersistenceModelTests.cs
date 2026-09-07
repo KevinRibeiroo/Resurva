@@ -17,12 +17,12 @@ public sealed class PersistenceModelTests
 
         Assert.NotNull(entity);
         var foreignKey = Assert.Single(entity.GetForeignKeys());
-        Assert.Equal(nameof(AnalysisEntity.ResumeId), Assert.Single(foreignKey.Properties).Name);
+        Assert.Equal(new[] { nameof(AnalysisEntity.OwnerUserId), nameof(AnalysisEntity.ResumeId) }, foreignKey.Properties.Select(x => x.Name));
         Assert.Equal(typeof(ResumeEntity), foreignKey.PrincipalEntityType.ClrType);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
 
         var hashIndex = Assert.Single(entity.GetIndexes(), index =>
-            index.Properties.Single().Name == nameof(AnalysisEntity.AnalysisInputHash));
+            index.Properties.Select(x => x.Name).SequenceEqual(new[] { nameof(AnalysisEntity.OwnerUserId), nameof(AnalysisEntity.AnalysisInputHash) }));
         Assert.True(hashIndex.IsUnique);
     }
 }

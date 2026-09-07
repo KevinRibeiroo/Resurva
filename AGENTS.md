@@ -17,7 +17,11 @@ O ResumeMatcher compara currículos em PDF/DOCX com descrições de vagas. Ele a
 - A API possui `/health`, rate limiting, limites de entrada e exclusão em cascata de currículo/análises.
 - O Gemini possui timeout e uma única nova tentativa por padrão para falhas temporárias.
 - O código possui login Google via Firebase Authentication, validação JWT na API e autorização para um único e-mail verificado configurado no backend. A ativação no Firebase e a transição do IAM do Cloud Run exigem o procedimento de `docs/AUTHENTICATION.md`.
-- Não há isolamento de dados entre usuários, acesso como visitante ou CI de testes configurado no repositório. O gatilho externo de deploy não substitui CI.
+- Currículos, análises e cache são isolados por OwnerUserId obtido do token. O acesso privado de uma conta permanece; não existe modo visitante.
+- Retenção: 30 dias desde a última atualização; leitura/cache hit não renovam. Comando de limpeza implementado, agendamento externo pendente. Backups: máximo 30 dias após exclusão, a verificar no provedor.
+- A migration de ownership preserva dados antigos sem dono e usa a última gravação conhecida (criação do currículo/análises) como UpdatedAt. Atribuição ao UID exige revisão antes do rollout/limpeza, conforme docs/DATA_PRIVACY.md.
+- Workflow CI versionado para PRs/push em develop/main; ativação e checks obrigatórios no GitHub dependem de configuração externa. O gatilho de deploy não espera o CI pós-push.
+- Exclusão completa de conta Firebase pendente. Existe operação interna de apagar dados do usuário, sem endpoint de encerramento de conta.
 - Consulte `docs/ROADMAP.md` antes de afirmar que algo futuro já está disponível.
 
 ## Arquitetura

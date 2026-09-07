@@ -7,101 +7,17 @@ using ResumeMatcher.Domain;
 
 namespace ResumeMatcher.Application;
 
-public sealed class WeightedScoringEngine : IScoringEngine
-{
-    private readonly ScoringOptions _options;
-
-    public WeightedScoringEngine(IOptions<ScoringOptions> options)
-    {
-        _options = options.Value;
-        var total = _options.SkillsWeight + _options.ExperienceWeight + _options.SeniorityWeight
-            + _options.RequirementsWeight + _options.EducationWeight;
-        if (Math.Abs(total - 1) > 0.0001)
-            throw new InvalidOperationException("Scoring weights must add up to 1.");
-    }
-
-    public ScoreBreakdownModel Calculate(ScoreComponentsModel components)
-    {
-        static double Normalize(double value)
-        {
-            return Math.Round(Math.Clamp(value, 0, 100), 2);
-        }
-
-        var skills = Normalize(components.Skills);
-        var experience = Normalize(components.Experience);
-        var seniority = Normalize(components.Seniority);
-        var requirements = Normalize(components.Requirements);
-        var education = Normalize(components.Education);
-        var overall = skills * _options.SkillsWeight + experience * _options.ExperienceWeight
-            + seniority * _options.SeniorityWeight + requirements * _options.RequirementsWeight
-            + education * _options.EducationWeight;
-        return new(Normalize(overall), skills, experience, seniority, requirements, education);
-    }
-}
-
-public sealed class ResumeService(
-    IEnumerable<IResumeTextExtractor> extractors,
-    IResumeRepository repository,
-    ILogger<ResumeService>? logger = null) : IResumeService
-{
-    private readonly ILogger<ResumeService> _logger = logger ?? NullLogger<ResumeService>.Instance;
-    private const long MaxFileSize = 10 * 1024 * 1024;
-
-    public async Task<UploadResumeResultModel> UploadAsync(UploadResumeCommand command, CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Iniciando processamento de upload do currículo '{FileName}' ({ContentType})",
-            command.FileName, command.ContentType);
-
-        if (!command.Content.CanRead)
-            throw new InvalidResumeException("The uploaded file cannot be read.");
-        if (command.Content.CanSeek && command.Content.Length > MaxFileSize)
-            throw new InvalidResumeException("The file exceeds the 10 MB limit.");
-
-        var extension = Path.GetExtension(command.FileName).ToLowerInvariant();
-        var extractor = extractors.FirstOrDefault(x => x.CanExtract(extension, command.ContentType))
-            ?? throw new UnsupportedResumeFormatException("Only PDF and DOCX files are supported.");
-
-        _logger.LogInformation("Extraindo texto do currículo '{FileName}' usando extrator {Extractor}",
-            command.FileName, extractor.GetType().Name);
-
-        var text = (await extractor.ExtractAsync(command.Content, cancellationToken)).Trim();
-        if (string.IsNullOrWhiteSpace(text))
-            throw new InvalidResumeException("No text could be extracted from the resume.");
-        if (text.Length > AnalysisConstraints.MaxExtractedResumeTextLength)
-            throw new InvalidResumeException($"The extracted resume text exceeds the {AnalysisConstraints.MaxExtractedResumeTextLength} character limit.");
-
-        _logger.LogInformation("Texto extraído com sucesso do currículo '{FileName}' ({CharCount} caracteres). Persistindo entidade...",
-            command.FileName, text.Length);
-
-        var resume = new ResumeEntity { FileName = Path.GetFileName(command.FileName), ContentType = command.ContentType, ExtractedText = text };
-        await repository.AddAsync(resume, cancellationToken);
-
-        _logger.LogInformation("Currículo '{FileName}' persistido com ID {ResumeId}", resume.FileName, resume.Id);
-        return new(resume.Id, resume.FileName, text.Length);
-    }
-
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
-    {
-        if (id == Guid.Empty)
-            throw new ArgumentException("Resume id is required.");
-
-        _logger.LogInformation("Iniciando exclusão do currículo {ResumeId} no repositório", id);
-        var deleted = await repository.DeleteAsync(id, cancellationToken);
-        _logger.LogInformation("Exclusão do currículo {ResumeId} finalizada. Sucesso: {Deleted}", id, deleted);
-        return deleted;
-    }
-}
-
 public sealed class AnalysisService(
     IResumeRepository resumes,
     IAnalysisRepository analyses,
     ILLMProvider llmProvider,
     IScoringEngine scoringEngine,
+    ICurrentUser currentUser,
     IOptions<ScoringOptions>? scoringOptions = null,
     ILogger<AnalysisService>? logger = null) : IAnalysisService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-    private static readonly ConcurrentDictionary<string, Lazy<Task<AnalysisResultModel>>> InFlightAnalyses = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<(string Owner, string Hash), Lazy<Task<AnalysisResultModel>>> InFlightAnalyses = new();
     private readonly ILogger<AnalysisService> _logger = logger ?? NullLogger<AnalysisService>.Instance;
     private readonly ScoringOptions _scoringOptions = scoringOptions?.Value ?? new ScoringOptions();
 
@@ -134,8 +50,9 @@ public sealed class AnalysisService(
 
         _logger.LogInformation("Analysis cache miss for hash {Hash}", analysisInputHash);
 
+        var inFlightKey = (currentUser.UserId, analysisInputHash);
         var inFlightAnalysis = InFlightAnalyses.GetOrAdd(
-            analysisInputHash,
+            inFlightKey,
             _ => new Lazy<Task<AnalysisResultModel>>(
                 () => CreateOrGetAnalysisAsync(resume, command.JobDescription, analysisInputHash, cancellationToken),
                 LazyThreadSafetyMode.ExecutionAndPublication));
@@ -147,7 +64,7 @@ public sealed class AnalysisService(
         finally
         {
             if (inFlightAnalysis.IsValueCreated && inFlightAnalysis.Value.IsCompleted)
-                InFlightAnalyses.TryRemove(analysisInputHash, out _);
+                InFlightAnalyses.TryRemove(inFlightKey, out _);
         }
     }
 
@@ -218,6 +135,7 @@ public sealed class AnalysisService(
             pointsOfAttention, comparison.Recommendations);
         var analysis = new AnalysisEntity
         {
+            OwnerUserId = currentUser.UserId,
             Id = id,
             ResumeId = resume.Id,
             AnalysisInputHash = analysisInputHash,

@@ -122,11 +122,13 @@ O MVP usa PostgreSQL com Npgsql e migrations do EF Core. Currículos armazenam o
 
 O hash é calculado sobre uma representação canônica composta por texto do currículo normalizado, descrição da vaga normalizada, modelo e configuração relevante do provider, versão do prompt, versão das regras de análise e configuração de scoring. Atualmente a temperatura do Gemini participa do fingerprint. A normalização remove espaços e quebras de linha redundantes, mas preserva pontuação e conteúdo semanticamente relevante.
 
-`AnalysisInputHash` possui índice único. Dentro de uma instância da API, requisições simultâneas com o mesmo hash compartilham a análise em andamento. O índice também trata a corrida de persistência entre instâncias; nesse caso, o resultado vencedor é recarregado. Em múltiplas instâncias ainda pode haver duas chamadas externas antes da disputa de inserção, pois o MVP não usa lock distribuído.
+O índice único é `(OwnerUserId, AnalysisInputHash)`. Dentro de uma instância, requisições com o mesmo dono/hash compartilham a análise em andamento. Conflitos de persistência entre instâncias recarregam o resultado somente desse dono. Em múltiplas instâncias ainda pode haver chamadas externas duplicadas antes da disputa de inserção; não há lock distribuído.
 
 A migration inicial cria o esquema PostgreSQL. A coluna do hash é anulável para que registros legados possam continuar válidos, embora análises antigas sem fingerprint não participem do cache. Dados existentes em arquivos SQLite não são transferidos automaticamente.
 
-`Analysis.ResumeId` possui foreign key para `Resume.Id`. A exclusão de um currículo remove também suas análises. O serviço executa essa remoção explicitamente para manter o mesmo comportamento nos testes e o banco garante a integridade com `ON DELETE CASCADE`.
+`Analysis.(OwnerUserId, ResumeId)` possui FK para `Resume.(OwnerUserId, Id)`, impedindo associação entre contas diferentes. Excluir um currículo apaga suas análises; repositório e banco garantem a cascata. Todas as operações HTTP usam repositórios com filtro por UID do token, incluindo cache. Acesso administrativo direto ao DbContext não é filtrado; não há RLS configurada por esta aplicação.
+
+Registros têm `UpdatedAt` e expiram após 30 dias desde atualização efetiva. Consultas/cache hit não renovam o prazo. `RetentionCleanupService` é um comando administrativo separado do servidor HTTP; agendamento externo ainda precisa ser ativado. Consulte [Privacidade](DATA_PRIVACY.md) antes de publicar a migration de ownership ou executar limpeza.
 
 ## Resiliência e limites
 
@@ -170,10 +172,10 @@ Não introduza dependências de infraestrutura na camada Domain ou acesso direto
 ## Limitações conhecidas
 
 - O vocabulário de skills do Mock é fixo.
-- Não há separação de dados por usuário: a autorização é limitada a uma única conta. Não amplie para uma lista de usuários antes de implementar ownership e isolamento do cache.
+- Ownership e cache isolados por UID estão implementados, mas a autorização continua limitada a uma conta. Cadastro multiusuário, encerramento de conta e modo visitante ainda precisam de fluxo próprio.
 - Revogação de sessão e desativação de conta no Firebase não são consultadas a cada requisição; um token já emitido pode continuar válido até expirar. A lista de acesso efetiva continua sendo a conta configurada na API.
-- Não há política automática de exclusão de currículos.
+- Expiração de 30 dias implementada; agendamento da limpeza física e verificação da retenção de backups ainda pendentes.
 - Não há migração automática de dados legados do SQLite para PostgreSQL.
 - A otimização automática de currículo ainda não está disponível.
-- Não há CI/CD nem observabilidade estruturada completa.
-- Os testes HTTP usam banco isolado em memória; a migration PostgreSQL é validada separadamente e foi aplicada no ambiente local.
+- CI de build/testes está versionado; checks obrigatórios dependem da configuração GitHub. Deploy externo permanece no Cloud Build. Observabilidade operacional completa ainda pendente.
+- Testes HTTP usam banco isolado em memória e JWTs sintéticos. Teste separado usa PostgreSQL descartável real para migrations, constraints, cascata e retenção; executado obrigatoriamente pelo workflow CI.

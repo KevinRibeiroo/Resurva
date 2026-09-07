@@ -36,19 +36,19 @@ public sealed class PrivateUserAuthorizationHandler(
 
         if (!string.Equals(email, options.Value.AllowedEmail.Trim(), StringComparison.OrdinalIgnoreCase))
         {
-            logger?.LogWarning("Autorização recusada para o e-mail '{Email}'. Apenas '{AllowedEmail}' tem acesso.", email, options.Value.AllowedEmail);
+            logger?.LogWarning("Autorização recusada: conta fora da lista de acesso.");
             return Task.CompletedTask;
         }
 
         if (!string.Equals(verified, "true", StringComparison.OrdinalIgnoreCase))
         {
-            logger?.LogWarning("Autorização recusada: o e-mail '{Email}' não está marcado como verificado pelo Google.", email);
+            logger?.LogWarning("Autorização recusada: e-mail não verificado.");
             return Task.CompletedTask;
         }
 
         if (firebase is null)
         {
-            logger?.LogWarning("Autorização recusada: claim 'firebase' ausente no token para '{Email}'.", email);
+            logger?.LogWarning("Autorização recusada: claim 'firebase' ausente.");
             return Task.CompletedTask;
         }
 
@@ -59,16 +59,16 @@ public sealed class PrivateUserAuthorizationHandler(
                 metadata.RootElement.TryGetProperty("sign_in_provider", out var provider) &&
                 provider.ValueKind == JsonValueKind.String && provider.GetString() == "google.com")
             {
-                logger?.LogInformation("Usuário '{Email}' autorizado com sucesso para o ambiente privado.", email);
+                logger?.LogInformation("Acesso autorizado ao ambiente privado.");
                 context.Succeed(requirement);
                 return Task.CompletedTask;
             }
 
-            logger?.LogWarning("Autorização recusada para '{Email}': sign_in_provider inválido ou diferente de 'google.com'.", email);
+            logger?.LogWarning("Autorização recusada: sign_in_provider inválido.");
         }
-        catch (JsonException exception)
+        catch (JsonException)
         {
-            logger?.LogWarning(exception, "Autorização recusada para '{Email}': metadados do Firebase mal formatados.", email);
+            logger?.LogWarning("Autorização recusada: metadados Firebase mal formatados.");
         }
 
         return Task.CompletedTask;

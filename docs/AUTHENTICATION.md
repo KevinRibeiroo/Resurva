@@ -69,7 +69,7 @@ Não retire o IAM de uma revisão antiga, que ainda não tenha a autenticação 
 
 Os testes HTTP usam tokens sintéticos assinados com RSA e chaves de teste em memória, sem credenciais Firebase reais. Cobrem acesso sem token em todos os endpoints, expiração, assinatura, emissor, audiência, claims, conta autorizada, provider Google e preflight CORS. O pipeline funcional de comparação/consulta/exclusão também roda autenticado.
 
-Não há consulta de revogação/desativação Firebase em cada requisição. Tokens já emitidos podem continuar aceitos até expirar; a restrição ao e-mail configurado é verificada em todas as requisições. Nunca amplie para várias contas antes de implementar propriedade de currículos/análises e isolamento do cache persistente.
+Não há consulta de revogação/desativação Firebase em cada requisição. Tokens já emitidos podem continuar aceitos até expirar; a restrição ao e-mail configurado é verificada em todas as requisições. Propriedade de currículos/análises e cache isolado por UID estão implementados; a abertura multiusuário ainda depende de fluxo de contas, atribuição dos dados legados e implantação dos controles de [privacidade](DATA_PRIVACY.md).
 
 A checagem `/health` passou a exigir token Firebase. Se configurar uma probe HTTP de infraestrutura, não a aponte para esse endpoint protegido; mantenha a probe TCP de inicialização até definir uma probe de liveness apropriada.
 

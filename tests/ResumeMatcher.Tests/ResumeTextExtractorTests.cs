@@ -44,7 +44,7 @@ public sealed class ResumeTextExtractorTests
     public async Task Empty_docx_text_is_rejected_by_service()
     {
         var extractor = new StubExtractor();
-        var service = new ResumeService([extractor], new StubRepository());
+        var service = new ResumeService([extractor], new StubRepository(), new TestCurrentUser());
         await Assert.ThrowsAsync<InvalidResumeException>(() => service.UploadAsync(new("empty.pdf", "application/pdf", new MemoryStream([1])), CancellationToken.None));
     }
 
