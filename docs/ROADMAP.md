@@ -4,8 +4,8 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 
 ## MVP atual
 
-- [x] Backend ASP.NET Core em .NET 8.
-- [x] Frontend React com TypeScript e Vite.
+- [x] Backend ASP.NET Core em .NET 10 (C# 14).
+- [x] Frontend React 19.2 com TypeScript e Vite 8.
 - [x] Upload de PDF e DOCX com limite de tamanho.
 - [x] Extração local de texto.
 - [x] Persistência com EF Core, PostgreSQL e migrations.

@@ -21,8 +21,8 @@ public sealed class PersistenceModelTests
         Assert.Equal(typeof(ResumeEntity), foreignKey.PrincipalEntityType.ClrType);
         Assert.Equal(DeleteBehavior.Cascade, foreignKey.DeleteBehavior);
 
-        var hashIndex = Assert.Single(entity.GetIndexes().Where(index =>
-            index.Properties.Single().Name == nameof(AnalysisEntity.AnalysisInputHash)));
+        var hashIndex = Assert.Single(entity.GetIndexes(), index =>
+            index.Properties.Single().Name == nameof(AnalysisEntity.AnalysisInputHash));
         Assert.True(hashIndex.IsUnique);
     }
 }
