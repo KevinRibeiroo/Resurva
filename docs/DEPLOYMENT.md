@@ -53,6 +53,10 @@ Para um ambiente pessoal no Cloud Run:
 
 A API aplica migrations ao iniciar. Isso é aceitável para o primeiro ambiente privado com uma única instância. Antes de executar várias réplicas ou promover para produção, mova a aplicação de migrations para uma etapa única e controlada do deploy.
 
+## Publicação do Frontend (Firebase Hosting)
+
+A publicação do frontend no canal live (`resume-matcher-f61df.web.app`) é automatizada pelo GitHub Actions ao realizar o merge de um Pull Request na branch `develop` (job `deploy-frontend`). A publicação só é acionada após a aprovação de todos os testes e builds. Consulte [CI](CI.md) para a configuração do segredo `FIREBASE_SERVICE_ACCOUNT_RESUME_MATCHER_F61DF`. Para publicação manual sob demanda, execute `cd src/frontend && npx -y firebase-tools deploy --only hosting`.
+
 ## Verificação
 
 Depois da publicação:
@@ -66,8 +70,14 @@ Depois da publicação:
 
 ## Limites desta fase
 
-- O login Google e a autorização de uma conta estão implementados; cadastro multiusuário, isolamento de dados e acesso como visitante não estão disponíveis.
+- O login Google, autorização de uma conta e isolamento por UID estão implementados; cadastro multiusuário e acesso como visitante não estão disponíveis.
 - Não remova o IAM antes de publicar e validar a revisão que exige JWT Firebase na aplicação.
 - Não use dados de terceiros sem consentimento.
 - Não existe transferência automática de dados SQLite legados.
-- Backup, retenção automática e auditoria continuam como próximos passos.
+- Expiração de 30 dias e comando de limpeza implementados; agendamento, backups e auditoria operacional pendentes. Leia [Privacidade](DATA_PRIVACY.md).
+
+## Antes de publicar ownership e retenção
+
+A migration `AddDataOwnershipAndRetention` torna registros antigos inacessíveis até atribuir seu dono. Como a API aplica migrations ao iniciar, planeje a janela e a [atribuição dos dados](DATA_PRIVACY.md) antes do merge que aciona deploy. Não execute limpeza antes dessa revisão e não reverta para uma API antiga com consultas globais.
+
+O [CI](CI.md) não modifica o gatilho Cloud Build. Ative checks obrigatórios e restrinja push direto/bypass na develop para impedir publicação de alterações não validadas.

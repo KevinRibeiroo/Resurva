@@ -99,7 +99,7 @@ public sealed class AnalysisServiceSeniorityTests
         var analysisRepo = new FakeAnalysisRepository();
         var llmProvider = new FakeLLMProvider(mockComparison);
 
-        var service = new AnalysisService(resumeRepo, analysisRepo, llmProvider, scoringEngine, scoringOptions);
+        var service = new AnalysisService(resumeRepo, analysisRepo, llmProvider, scoringEngine, new TestCurrentUser(), scoringOptions);
 
         var result = await service.CompareAsync(new CompareCommand(resumeId, jobDescription), CancellationToken.None);
 

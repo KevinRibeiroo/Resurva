@@ -12,6 +12,9 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("ResumeMatcher")
             ?? throw new InvalidOperationException("Connection string 'ResumeMatcher' is required.");
         services.AddDbContext<ResumeMatcherDbContext>(options => options.UseNpgsql(connectionString));
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<RetentionCleanupService>();
+        services.AddScoped<IAccountDataService, AccountDataService>();
         services.AddScoped<IResumeRepository, ResumeRepository>();
         services.AddScoped<IAnalysisRepository, AnalysisRepository>();
         services.AddScoped<IResumeTextExtractor, PdfResumeTextExtractor>();
