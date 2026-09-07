@@ -8,7 +8,7 @@ O ResumeMatcher compara currículos em PDF/DOCX com descrições de vagas. Ele a
 
 ## Estado real
 
-- O MVP possui backend .NET 8 e frontend React.
+- O MVP possui backend .NET 10 (C# 14) e frontend React 19.2 (Vite 8).
 - O upload, a extração, a comparação, a pontuação e a persistência local funcionam.
 - `MockLLMProvider` é o padrão; `GeminiLLMProvider` pode ser habilitado por configuração.
 - A persistência usa PostgreSQL/Npgsql e migrations do Entity Framework Core.
