@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { applyOptimization } from './api'
+import { applyOptimization, downloadAdaptedResume } from './api'
 import type {
   OptimizationPlan,
   OptimizationDecision,
@@ -17,28 +17,35 @@ export function normalizeLevel(level: unknown): OptimizationSafetyLevel {
 
 interface OptimizationViewProps {
   plan: OptimizationPlan
-  onPlanUpdated?: (newPlan: OptimizationPlan) => void
+  onBack?: () => void
 }
 
-export function OptimizationView({ plan }: OptimizationViewProps) {
-  // State for user decisions per suggestion: accepted (boolean) and confirmed (boolean)
-  const [decisions, setDecisions] = useState<Record<string, { accepted: boolean; confirmed: boolean }>>(() => {
-    const initial: Record<string, { accepted: boolean; confirmed: boolean }> = {}
+interface DecisionState {
+  accepted: boolean
+  confirmed: boolean
+  userDeclaration: string
+}
+
+export function OptimizationView({ plan, onBack }: OptimizationViewProps) {
+  // State for user decisions per suggestion: accepted, confirmed, userDeclaration
+  const [decisions, setDecisions] = useState<Record<string, DecisionState>>(() => {
+    const initial: Record<string, DecisionState> = {}
     for (const suggestion of plan.suggestions) {
       const level = normalizeLevel(suggestion.level)
       if (level === 'Forbidden') {
-        initial[suggestion.id] = { accepted: false, confirmed: false }
+        initial[suggestion.id] = { accepted: false, confirmed: false, userDeclaration: '' }
       } else if (level === 'Safe') {
-        initial[suggestion.id] = { accepted: true, confirmed: false }
+        initial[suggestion.id] = { accepted: true, confirmed: false, userDeclaration: '' }
       } else {
-        // NeedsConfirmation defaults to unaccepted until user reviews and confirms
-        initial[suggestion.id] = { accepted: false, confirmed: false }
+        // NeedsConfirmation is NEVER pre-accepted or pre-confirmed
+        initial[suggestion.id] = { accepted: false, confirmed: false, userDeclaration: '' }
       }
     }
     return initial
   })
 
   const [busy, setBusy] = useState(false)
+  const [exportingFormat, setExportingFormat] = useState<'pdf' | 'docx' | null>(null)
   const [error, setError] = useState('')
   const [result, setResult] = useState<OptimizationResult | null>(null)
   const [copied, setCopied] = useState(false)
@@ -65,6 +72,16 @@ export function OptimizationView({ plan }: OptimizationViewProps) {
     }))
   }
 
+  function changeDeclaration(id: string, userDeclaration: string) {
+    setDecisions(prev => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        userDeclaration
+      }
+    }))
+  }
+
   async function handleApply() {
     setBusy(true)
     setError('')
@@ -72,7 +89,8 @@ export function OptimizationView({ plan }: OptimizationViewProps) {
       const decisionList: OptimizationDecision[] = Object.entries(decisions).map(([suggestionId, val]) => ({
         suggestionId,
         accepted: val.accepted,
-        confirmed: val.confirmed
+        confirmed: val.confirmed,
+        userDeclaration: val.userDeclaration.trim() ? val.userDeclaration.trim() : undefined
       }))
 
       const res = await applyOptimization(plan.id, plan.version, decisionList)
@@ -95,10 +113,29 @@ export function OptimizationView({ plan }: OptimizationViewProps) {
     }
   }
 
+  async function handleExport(format: 'pdf' | 'docx') {
+    setExportingFormat(format)
+    setError('')
+    try {
+      await downloadAdaptedResume(plan.id, format)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : `Erro ao exportar currículo em ${format.toUpperCase()}.`)
+    } finally {
+      setExportingFormat(null)
+    }
+  }
+
   return (
     <section className="optimization-container" aria-label="Adaptação de currículo">
       <div className="optimization-header">
-        <span className="badge-pill">Fluxo Guiado</span>
+        <div className="header-nav">
+          <span className="badge-pill">Fluxo Guiado</span>
+          {onBack && (
+            <button type="button" className="btn-back" onClick={onBack}>
+              ← Voltar à Análise
+            </button>
+          )}
+        </div>
         <h2>Sugestões de Adaptação para a Vaga</h2>
         <p className="muted">
           Revise com atenção as sugestões abaixo. Nenhuma informação será alterada ou inventada sem a sua expressa validação.
@@ -117,8 +154,10 @@ export function OptimizationView({ plan }: OptimizationViewProps) {
                 suggestion={item}
                 accepted={decisions[item.id]?.accepted ?? false}
                 confirmed={decisions[item.id]?.confirmed ?? false}
+                userDeclaration={decisions[item.id]?.userDeclaration ?? ''}
                 onToggleAccept={accept => toggleAccept(item.id, accept)}
                 onToggleConfirm={confirm => toggleConfirm(item.id, confirm)}
+                onChangeDeclaration={decl => changeDeclaration(item.id, decl)}
               />
             ))}
           </div>
@@ -147,13 +186,38 @@ export function OptimizationView({ plan }: OptimizationViewProps) {
           <div className="adapted-preview-container">
             <div className="preview-toolbar">
               <label htmlFor="adapted-text-area" className="preview-label">Texto adaptado final:</label>
-              <button
-                type="button"
-                className="btn-secondary btn-copy"
-                onClick={handleCopy}
-              >
-                {copied ? '✓ Copiado!' : 'Copiar texto adaptado'}
-              </button>
+              <div className="action-button-group">
+                <button
+                  type="button"
+                  className="btn-export btn-export-pdf"
+                  disabled={exportingFormat !== null}
+                  onClick={() => handleExport('pdf')}
+                >
+                  {exportingFormat === 'pdf' ? 'Gerando PDF…' : '📄 Baixar PDF'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-export btn-export-docx"
+                  disabled={exportingFormat !== null}
+                  onClick={() => handleExport('docx')}
+                >
+                  {exportingFormat === 'docx' ? 'Gerando DOCX…' : '📝 Baixar DOCX'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary btn-copy"
+                  onClick={handleCopy}
+                >
+                  {copied ? '✓ Copiado!' : 'Copiar texto'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary btn-edit-decisions"
+                  onClick={() => setResult(null)}
+                >
+                  ✏️ Editar decisões
+                </button>
+              </div>
             </div>
             <textarea
               id="adapted-text-area"
@@ -169,9 +233,21 @@ export function OptimizationView({ plan }: OptimizationViewProps) {
             <ul>
               {result.appliedChanges.map(item => {
                 const itemLevel = normalizeLevel(item.level)
+                const isUserDeclared = item.informationOrigin === 'DeclaradaPeloUsuario'
                 return (
-                  <li key={item.suggestionId}>
-                    <strong>[{itemLevel === 'Safe' ? 'Segura' : 'Confirmada'}]</strong> {item.proposedText}
+                  <li key={item.suggestionId} className="applied-item">
+                    <div className="applied-item-header">
+                      <strong>[{itemLevel === 'Safe' ? 'Segura' : 'Confirmada'}]</strong>
+                      <span className={`badge ${isUserDeclared ? 'badge-info' : 'badge-safe'}`}>
+                        {isUserDeclared ? 'Origem: Declarada pelo Candidato' : 'Origem: Currículo Original'}
+                      </span>
+                    </div>
+                    <p className="applied-item-text">{item.proposedText}</p>
+                    {item.userDeclaration && (
+                      <p className="user-declaration-snippet">
+                        <strong>Contexto informado:</strong> “{item.userDeclaration}”
+                      </p>
+                    )}
                     <small className="muted">{item.reason}</small>
                   </li>
                 )
@@ -189,8 +265,10 @@ interface SuggestionCardProps {
   suggestion: OptimizationSuggestion
   accepted: boolean
   confirmed: boolean
+  userDeclaration: string
   onToggleAccept: (accepted: boolean) => void
   onToggleConfirm: (confirmed: boolean) => void
+  onChangeDeclaration: (declaration: string) => void
 }
 
 function SuggestionCard({
@@ -198,8 +276,10 @@ function SuggestionCard({
   suggestion,
   accepted,
   confirmed,
+  userDeclaration,
   onToggleAccept,
-  onToggleConfirm
+  onToggleConfirm,
+  onChangeDeclaration
 }: SuggestionCardProps) {
   const level = normalizeLevel(suggestion.level)
   const isForbidden = level === 'Forbidden'
@@ -238,14 +318,21 @@ function SuggestionCard({
         {isForbidden && (
           <div className="forbidden-notice" role="alert">
             <p>
-              ⚠️ <strong>Sugestão Bloqueada:</strong> Esta recomendação implica alegações sem respaldo factual.
-              Por razões de segurança e integridade ética, não é permitido incorporar este item.
+              ⚠️ <strong>Sugestão Bloqueada:</strong> Esta recomendação implica alegações sem respaldo factual ou inventadas.
+              Por razões de integridade ética e segurança, não é permitido incorporar este item.
             </p>
           </div>
         )}
 
         {!isForbidden && isNeedsConfirmation && accepted && (
           <div className="confirmation-box">
+            <div className="confirmation-question-box">
+              <span className="question-title">Confirmação de Experiência:</span>
+              <p className="question-text">
+                {suggestion.confirmationQuestion ?? 'Você confirma que possui vivência real com esta competência para incluí-la no currículo?'}
+              </p>
+            </div>
+
             <label className="checkbox-label">
               <input
                 type="checkbox"
@@ -253,12 +340,27 @@ function SuggestionCard({
                 onChange={e => onToggleConfirm(e.target.checked)}
               />
               <span>
-                {suggestion.confirmationQuestion ?? 'Confirmo que possuo experiência real com esta competência.'}
+                Confirmo expressamente que esta informação é verdadeira e vivenciada por mim.
               </span>
             </label>
+
+            <div className="declaration-field">
+              <label htmlFor={`decl-${suggestion.id}`} className="declaration-label">
+                Detalhes ou contexto adicional da sua experiência (opcional):
+              </label>
+              <input
+                id={`decl-${suggestion.id}`}
+                type="text"
+                className="declaration-input"
+                placeholder="Ex: Atuação em microsserviços por 2 anos com alta volumetria..."
+                value={userDeclaration}
+                onChange={e => onChangeDeclaration(e.target.value)}
+              />
+            </div>
+
             {!confirmed && (
               <p className="warning-text">
-                * Para que esta inclusão seja aplicada, você deve confirmar expressamente que a informação é verdadeira.
+                * Para que esta inclusão seja aplicada, marque a caixa confirmando a veracidade da informação.
               </p>
             )}
           </div>

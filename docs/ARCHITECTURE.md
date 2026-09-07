@@ -48,6 +48,8 @@ Implementa os contratos da camada Application:
 - `ResumeMatcherDbContext` e repositórios com EF Core/PostgreSQL (`ResumeRepository`, `AnalysisRepository`, `ResumeOptimizationRepository`);
 - `PdfResumeTextExtractor` com PdfPig;
 - `DocxResumeTextExtractor` com Open XML SDK;
+- `DocxResumeDocumentExporter` para exportação de currículos adaptados via Open XML SDK;
+- `PdfResumeDocumentExporter` para exportação de currículos adaptados via PdfPig com fontes TrueType embutidas;
 - `MockLLMProvider` e `MockResumeOptimizationProvider`, usados para validar o pipeline sem API externa;
 - `GeminiLLMProvider` e `GeminiResumeOptimizationProvider`, providers reais com modelo configurável via Google.GenAI;
 - `GeminiRequestExecutor`, responsável por timeout e retry limitado de falhas temporárias;
@@ -177,7 +179,5 @@ Não introduza dependências de infraestrutura na camada Domain ou acesso direto
 - Ownership e cache isolados por UID estão implementados, mas a autorização continua limitada a uma conta. Cadastro multiusuário, encerramento de conta e modo visitante ainda precisam de fluxo próprio.
 - Revogação de sessão e desativação de conta no Firebase não são consultadas a cada requisição; um token já emitido pode continuar válido até expirar. A lista de acesso efetiva continua sendo a conta configurada na API.
 - Expiração de 30 dias implementada; agendamento da limpeza física e verificação da retenção de backups ainda pendentes.
-- Não há migração automática de dados legados do SQLite para PostgreSQL.
-- A adaptação responsável de currículo gera texto adaptado puro com revisão e confirmação explícita; a exportação com diagramação visual em PDF/DOCX ainda não está disponível.
-- CI de build/testes está versionado; checks obrigatórios dependem da configuração GitHub. Deploy externo permanece no Cloud Build. Observabilidade operacional completa ainda pendente.
+- A adaptação responsável de currículo gera texto adaptado com revisão e confirmação explícita de itens sem evidência prévia; a exportação para PDF e DOCX está disponível diretamente pelo endpoint `GET /api/optimizations/{id}/export?format=pdf|docx`.
 - Testes HTTP usam banco isolado em memória e JWTs sintéticos. Teste separado usa PostgreSQL descartável real para migrations, constraints, cascata e retenção; executado obrigatoriamente pelo workflow CI.

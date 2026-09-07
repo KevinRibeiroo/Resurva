@@ -11,6 +11,7 @@ namespace ResumeMatcher.Api.Controllers;
 [EnableRateLimiting(ApiRateLimitOptions.PolicyName)]
 public sealed class OptimizationsController(
     IResumeOptimizationService service,
+    IEnumerable<IResumeDocumentExporter> exporters,
     ILogger<OptimizationsController> logger) : ControllerBase
 {
     [HttpPost("analysis/{analysisId:guid}/optimization")]
@@ -54,5 +55,58 @@ public sealed class OptimizationsController(
             id, result.AppliedChanges.Count);
 
         return Ok(result);
+    }
+
+    [HttpGet("optimizations/{id:guid}/export")]
+    public async Task<IActionResult> Export(
+        Guid id,
+        [FromQuery] string format,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(format))
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Formato inválido",
+                Detail = "O parâmetro de consulta 'format' é obrigatório. Formatos válidos: pdf, docx."
+            });
+        }
+
+        var exporter = exporters.FirstOrDefault(e => e.Format.Equals(format, StringComparison.OrdinalIgnoreCase));
+        if (exporter is null)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Formato não suportado",
+                Detail = $"Formato '{format}' não suportado. Use 'pdf' ou 'docx'."
+            });
+        }
+
+        logger.LogInformation("Exportando currículo adaptado para plano {OptimizationId} no formato {Format}", id, format);
+        var plan = await service.GetPlanAsync(id, cancellationToken);
+        if (plan is null)
+        {
+            logger.LogWarning("Plano de otimização {OptimizationId} não encontrado para exportação", id);
+            return NotFound();
+        }
+
+        if (plan.Status != "Applied" || string.IsNullOrWhiteSpace(plan.AdaptedText))
+        {
+            logger.LogWarning("Tentativa de exportação para plano {OptimizationId} que não está no status 'Applied'", id);
+            return Conflict(new ProblemDetails
+            {
+                Status = StatusCodes.Status409Conflict,
+                Title = "Plano não aplicado",
+                Detail = "O currículo precisa ser adaptado e aplicado com decisões antes da exportação."
+            });
+        }
+
+        var documentBytes = await exporter.ExportAsync(plan.AdaptedText, cancellationToken);
+        var fileName = $"curriculo-adaptado{exporter.FileExtension}";
+
+        logger.LogInformation("Exportação concluída para plano {OptimizationId} ({Size} bytes)", id, documentBytes.Length);
+        return File(documentBytes, exporter.ContentType, fileName);
     }
 }

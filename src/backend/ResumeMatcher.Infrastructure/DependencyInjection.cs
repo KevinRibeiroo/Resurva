@@ -20,6 +20,8 @@ public static class DependencyInjection
         services.AddScoped<IResumeOptimizationRepository, ResumeOptimizationRepository>();
         services.AddScoped<IResumeTextExtractor, PdfResumeTextExtractor>();
         services.AddScoped<IResumeTextExtractor, DocxResumeTextExtractor>();
+        services.AddScoped<IResumeDocumentExporter, DocxResumeDocumentExporter>();
+        services.AddScoped<IResumeDocumentExporter, PdfResumeDocumentExporter>();
 
         services.AddOptions<GeminiOptions>()
             .Bind(configuration.GetSection(GeminiOptions.SectionName))

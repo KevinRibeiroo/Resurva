@@ -214,6 +214,89 @@ public sealed class ResumeOptimizationServiceTests
             service.ApplyDecisionsAsync(plan.Id, new ApplyOptimizationCommand(1, conflictingDecisions), CancellationToken.None));
     }
 
+    [Fact]
+    public async Task ApplyDecisions_WithUserDeclaration_SetsOriginToDeclaradaPeloUsuarioAndAppliesText()
+    {
+        var resumeRepo = new InMemoryResumeRepository();
+        var analysisRepo = new InMemoryAnalysisRepository();
+        var optRepo = new InMemoryOptimizationRepository();
+
+        var resume = new ResumeEntity
+        {
+            Id = Guid.NewGuid(),
+            OwnerUserId = _currentUser.UserId,
+            FileName = "curriculo.pdf",
+            ContentType = "application/pdf",
+            ExtractedText = "Desenvolvedor Backend C# com vivência em SQL Server.",
+            CreatedAt = _clock.GetUtcNow(),
+            UpdatedAt = _clock.GetUtcNow()
+        };
+        await resumeRepo.AddAsync(resume, CancellationToken.None);
+
+        var analysisId = Guid.NewGuid();
+        var analysis = new AnalysisEntity
+        {
+            Id = analysisId,
+            OwnerUserId = _currentUser.UserId,
+            ResumeId = resume.Id,
+            JobDescription = "Vaga C# e PostgreSQL",
+            AnalysisInputHash = "hash-user-decl",
+            ResultJson = JsonSerializer.Serialize(new AnalysisResultModel(
+                analysisId, resume.Id, 80, 80, 80, 80, 80, 80,
+                [], [], [], [], [], [], [])),
+            CreatedAt = _clock.GetUtcNow(),
+            UpdatedAt = _clock.GetUtcNow()
+        };
+        await analysisRepo.TryAddAsync(analysis, CancellationToken.None);
+
+        var needsConfId = Guid.NewGuid();
+        var fakeProvider = new FakeOptimizationProvider(
+        [
+            new OptimizationSuggestionModel(
+                needsConfId,
+                OptimizationSafetyLevel.NeedsConfirmation,
+                false,
+                "",
+                "Experiência com PostgreSQL",
+                "Requisito da vaga não mencionado no currículo",
+                null,
+                "Você possui experiência com PostgreSQL em projetos?")
+        ]);
+
+        var service = new ResumeOptimizationService(
+            resumeRepo, analysisRepo, optRepo, fakeProvider, _safetyValidator, _currentUser, _clock);
+
+        var plan = await service.CreatePlanAsync(analysis.Id, CancellationToken.None);
+
+        // Accept and confirm with custom UserDeclaration
+        const string declaration = "Atuação com PostgreSQL em microsserviços de cobrança por 2 anos.";
+        var decisions = new List<OptimizationDecisionModel>
+        {
+            new(needsConfId, Accepted: true, Confirmed: true, UserDeclaration: declaration)
+        };
+
+        var result = await service.ApplyDecisionsAsync(plan.Id, new ApplyOptimizationCommand(1, decisions), CancellationToken.None);
+
+        Assert.Single(result.AppliedChanges);
+        var applied = result.AppliedChanges[0];
+        Assert.Equal("DeclaradaPeloUsuario", applied.InformationOrigin);
+        Assert.Equal(declaration, applied.UserDeclaration);
+        Assert.True(applied.WasConfirmed);
+        Assert.Contains(declaration, result.AdaptedText);
+
+        // Replay with identical declaration succeeds
+        var replay = await service.ApplyDecisionsAsync(plan.Id, new ApplyOptimizationCommand(1, decisions), CancellationToken.None);
+        Assert.Equal(result.AdaptedText, replay.AdaptedText);
+
+        // Replay with changed UserDeclaration throws conflict exception
+        var conflictDecisions = new List<OptimizationDecisionModel>
+        {
+            new(needsConfId, Accepted: true, Confirmed: true, UserDeclaration: "Outro texto de declaração")
+        };
+        await Assert.ThrowsAsync<OptimizationConflictException>(() =>
+            service.ApplyDecisionsAsync(plan.Id, new ApplyOptimizationCommand(1, conflictDecisions), CancellationToken.None));
+    }
+
     private sealed class FakeOptimizationProvider(IReadOnlyList<OptimizationSuggestionModel> suggestions) : IResumeOptimizationProvider
     {
         public string ModelName => "fake-opt-model";

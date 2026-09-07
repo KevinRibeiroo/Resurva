@@ -40,12 +40,14 @@ export type OptimizationPlan = {
   originalText: string
   suggestions: OptimizationSuggestion[]
   createdAt: string
+  adaptedText?: string | null
 }
 
 export type OptimizationDecision = {
   suggestionId: string
   accepted: boolean
   confirmed?: boolean
+  userDeclaration?: string
 }
 
 export type AppliedOptimizationItem = {
@@ -55,6 +57,8 @@ export type AppliedOptimizationItem = {
   proposedText: string
   reason: string
   wasConfirmed: boolean
+  informationOrigin?: string
+  userDeclaration?: string
 }
 
 export type OptimizationResult = {

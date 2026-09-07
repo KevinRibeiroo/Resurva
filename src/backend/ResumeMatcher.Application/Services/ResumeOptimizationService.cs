@@ -168,7 +168,8 @@ public sealed class ResumeOptimizationService(
             entity.Status,
             entity.OriginalText,
             suggestions,
-            entity.CreatedAt);
+            entity.CreatedAt,
+            entity.AdaptedText);
     }
 
     public async Task<OptimizationResultModel> ApplyDecisionsAsync(
@@ -245,13 +246,24 @@ public sealed class ResumeOptimizationService(
                 continue;
             }
 
+            var origin = canonical.Level == OptimizationSafetyLevel.Safe
+                ? "CurriculoOriginal"
+                : "DeclaradaPeloUsuario";
+
+            var userDecl = string.IsNullOrWhiteSpace(decision.UserDeclaration) ? null : decision.UserDeclaration.Trim();
+            var effectiveProposed = !string.IsNullOrWhiteSpace(userDecl) && canonical.Level == OptimizationSafetyLevel.NeedsConfirmation
+                ? userDecl
+                : canonical.ProposedText;
+
             appliedItems.Add(new AppliedOptimizationItemModel(
                 canonical.Id,
                 canonical.Level,
                 canonical.OriginalText,
-                canonical.ProposedText,
+                effectiveProposed,
                 canonical.Reason,
-                decision.Confirmed));
+                decision.Confirmed,
+                origin,
+                userDecl));
         }
 
         var adaptedText = ComposeAdaptedText(entity.OriginalText, appliedItems);
@@ -327,7 +339,8 @@ public sealed class ResumeOptimizationService(
         {
             if (!firstMap.TryGetValue(item.SuggestionId, out var existing))
                 return false;
-            if (existing.Accepted != item.Accepted || existing.Confirmed != item.Confirmed)
+            if (existing.Accepted != item.Accepted || existing.Confirmed != item.Confirmed ||
+                !string.Equals(existing.UserDeclaration?.Trim(), item.UserDeclaration?.Trim(), StringComparison.Ordinal))
                 return false;
         }
 
