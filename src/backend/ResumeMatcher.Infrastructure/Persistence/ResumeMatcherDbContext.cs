@@ -22,6 +22,14 @@ public sealed class ResumeMatcherDbContext(DbContextOptions<ResumeMatcherDbConte
         }
     }
 
+    public DbSet<ResumeOptimizationEntity> Optimizations
+    {
+        get
+        {
+            return Set<ResumeOptimizationEntity>();
+        }
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ResumeEntity>(entity =>
@@ -45,6 +53,24 @@ public sealed class ResumeMatcherDbContext(DbContextOptions<ResumeMatcherDbConte
             entity.Property(x => x.AnalysisInputHash).HasMaxLength(64);
             entity.HasIndex(x => new { x.OwnerUserId, x.AnalysisInputHash }).IsUnique();
             entity.HasIndex(x => x.UpdatedAt);
+        });
+        modelBuilder.Entity<ResumeOptimizationEntity>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.OwnerUserId).HasMaxLength(128).IsRequired();
+            entity.HasOne<ResumeEntity>()
+                .WithMany()
+                .HasForeignKey(x => new { x.OwnerUserId, x.ResumeId })
+                .HasPrincipalKey(x => new { x.OwnerUserId, x.Id })
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<AnalysisEntity>()
+                .WithMany()
+                .HasForeignKey(x => new { x.OwnerUserId, x.AnalysisId })
+                .HasPrincipalKey(x => new { x.OwnerUserId, x.Id })
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(x => x.Status).HasMaxLength(32);
+            entity.HasIndex(x => x.UpdatedAt);
+            entity.HasIndex(x => new { x.OwnerUserId, x.AnalysisId });
         });
     }
 }

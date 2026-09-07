@@ -88,8 +88,24 @@ public sealed class PostgresIsolationTests
             // Database cascade, independently of the repository's explicit deletion.
             await using (var direct = new ResumeMatcherDbContext(options))
             {
+                direct.Optimizations.Add(new ResumeOptimizationEntity
+                {
+                    Id = Guid.NewGuid(),
+                    OwnerUserId = a.OwnerUserId,
+                    ResumeId = a.Id,
+                    AnalysisId = aa.Id,
+                    OriginalText = a.ExtractedText,
+                    Version = 1,
+                    Status = "Pending",
+                    SuggestionsJson = "[]",
+                    CreatedAt = clock.GetUtcNow(),
+                    UpdatedAt = clock.GetUtcNow()
+                });
+                await direct.SaveChangesAsync();
+
                 await direct.Resumes.Where(x => x.Id == a.Id).ExecuteDeleteAsync();
                 Assert.False(await direct.Analyses.AnyAsync(x => x.Id == aa.Id));
+                Assert.False(await direct.Optimizations.AnyAsync(x => x.ResumeId == a.Id));
                 Assert.True(await direct.Analyses.AnyAsync(x => x.Id == ab.Id));
             }
 
@@ -115,6 +131,7 @@ public sealed class PostgresIsolationTests
             await using var verify = new ResumeMatcherDbContext(options);
             Assert.Empty(await verify.Resumes.ToListAsync());
             Assert.Empty(await verify.Analyses.ToListAsync());
+            Assert.Empty(await verify.Optimizations.ToListAsync());
         }
         finally
         {

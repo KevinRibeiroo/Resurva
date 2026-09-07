@@ -17,12 +17,18 @@ if (args.Contains("--purge-expired", StringComparer.Ordinal))
     return;
 }
 builder.Services.AddProblemDetails();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddFirebaseAuthentication(builder.Configuration);
 builder.Services.Configure<ScoringOptions>(builder.Configuration.GetSection(ScoringOptions.SectionName));
 builder.Services.AddScoped<IScoringEngine, WeightedScoringEngine>();
+builder.Services.AddScoped<IOptimizationSafetyValidator, OptimizationSafetyValidator>();
+builder.Services.AddScoped<IResumeOptimizationService, ResumeOptimizationService>();
 builder.Services.AddScoped<IResumeService, ResumeService>();
 builder.Services.AddScoped<IAnalysisService, AnalysisService>();
 builder.Services.AddInfrastructure(builder.Configuration);

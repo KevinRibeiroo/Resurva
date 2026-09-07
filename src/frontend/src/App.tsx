@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react'
-import { compareResume, uploadResume } from './api'
-import type { AnalysisResult, EvidenceItem } from './types'
+import { compareResume, uploadResume, createOptimizationPlan } from './api'
+import type { AnalysisResult, EvidenceItem, OptimizationPlan } from './types'
+import { OptimizationView } from './OptimizationView'
 
 function Score({ label, value }: { label: string; value: number }) {
   return <div className="score"><span>{label}</span><strong>{Math.round(value)}</strong><progress max="100" value={value} /></div>
@@ -18,15 +19,33 @@ export function App() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
+  const [optimizationPlan, setOptimizationPlan] = useState<OptimizationPlan | null>(null)
+  const [optBusy, setOptBusy] = useState(false)
+  const [optError, setOptError] = useState('')
+
   async function submit(event: FormEvent) {
     event.preventDefault()
     if (!file) return setError('Selecione um currículo em PDF ou DOCX.')
-    setBusy(true); setError(''); setResult(undefined)
+    setBusy(true); setError(''); setResult(undefined); setOptimizationPlan(null); setOptError('')
     try {
       const resumeId = await uploadResume(file)
       setResult(await compareResume(resumeId, description))
     } catch (caught) { setError(caught instanceof Error ? caught.message : 'Erro inesperado.') }
     finally { setBusy(false) }
+  }
+
+  async function startOptimization() {
+    if (!result) return
+    setOptBusy(true)
+    setOptError('')
+    try {
+      const plan = await createOptimizationPlan(result.id)
+      setOptimizationPlan(plan)
+    } catch (caught) {
+      setOptError(caught instanceof Error ? caught.message : 'Não foi possível gerar as sugestões de adaptação.')
+    } finally {
+      setOptBusy(false)
+    }
   }
 
   return <main>
@@ -41,7 +60,22 @@ export function App() {
       <div className="overall"><span>Aderência geral</span><strong>{Math.round(result.overallScore)}</strong><small>/ 100</small></div>
       <div className="breakdown"><Score label="Skills" value={result.skillsScore} /><Score label="Experiência" value={result.experienceScore} /><Score label="Senioridade" value={result.seniorityScore} /><Score label="Requisitos" value={result.requirementsScore} /><Score label="Formação" value={result.educationScore} /></div>
       <div className="grid"><Items title="Skills encontradas" items={result.matchedSkills} /><Items title="Skills ausentes" items={result.missingSkills} /><Items title="Requisitos atendidos" items={result.requirementsMet} /><Items title="Requisitos não atendidos" items={result.requirementsMissing} /><Items title="Pontos fortes" items={result.strengths} /><Items title="Pontos de atenção" items={result.pointsOfAttention} /><Items title="Recomendações" items={result.recommendations} /></div>
-      <button disabled title="Disponível na próxima etapa">Adaptar currículo para esta vaga</button>
+
+      {!optimizationPlan ? (
+        <div className="optimization-cta">
+          <button
+            type="button"
+            className="btn-optimize"
+            disabled={optBusy}
+            onClick={startOptimization}
+          >
+            {optBusy ? 'Gerando sugestões de adaptação…' : 'Adaptar currículo para esta vaga'}
+          </button>
+          {optError && <p role="alert" className="error">{optError}</p>}
+        </div>
+      ) : (
+        <OptimizationView plan={optimizationPlan} />
+      )}
     </div>}
   </main>
 }

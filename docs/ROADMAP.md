@@ -68,11 +68,12 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 
 ### 5. Otimização responsável do currículo
 
-- [ ] Sugerir melhorias de redação baseadas apenas em fatos existentes.
-- [ ] Destacar alterações factuais para confirmação explícita.
-- [ ] Bloquear sugestões sem evidência quando forem apresentadas como verdade.
-- [ ] Manter histórico das sugestões aceitas e rejeitadas.
-- [ ] Exportar uma versão revisada em formato apropriado.
+- [x] Sugerir melhorias de redação baseadas apenas em fatos existentes.
+- [x] Destacar alterações factuais para confirmação explícita.
+- [x] Bloquear sugestões sem evidência quando forem apresentadas como verdade.
+- [x] Manter histórico das sugestões aceitas e rejeitadas e controle de versão contra conflitos.
+- [x] Gerar e exibir a versão adaptada em texto puro com cópia para área de transferência.
+- [ ] Exportação com diagramação/estilização visual em PDF/DOCX (próxima fase).
 
 ## Planos futuros
 

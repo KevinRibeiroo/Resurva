@@ -20,7 +20,8 @@ Aplicação web para comparar um currículo com uma descrição de vaga e aprese
 - Isolamento de currículos, análises e cache pelo UID autenticado.
 - Expiração de acesso após 30 dias desde a última atualização e comando de limpeza física (agendamento externo pendente).
 - Workflow CI de build/testes do backend e typecheck/build do frontend (proteção das branches depende de ativação no GitHub).
-- Validação de segurança para impedir sugestões que adicionem informações não confirmadas.
+- Adaptação responsável de currículo para a vaga analisada: sugestões com níveis de segurança (`Safe`, `NeedsConfirmation`, `Forbidden`), confirmação explícita obrigatória para novas alegações e geração de versão textual adaptada.
+- Validação de segurança e anti-alucinação no servidor para impedir sugestões que adicionem informações não confirmadas ou inventadas.
 
 ## Tecnologias
 

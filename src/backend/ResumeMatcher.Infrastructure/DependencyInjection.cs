@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<IAccountDataService, AccountDataService>();
         services.AddScoped<IResumeRepository, ResumeRepository>();
         services.AddScoped<IAnalysisRepository, AnalysisRepository>();
+        services.AddScoped<IResumeOptimizationRepository, ResumeOptimizationRepository>();
         services.AddScoped<IResumeTextExtractor, PdfResumeTextExtractor>();
         services.AddScoped<IResumeTextExtractor, DocxResumeTextExtractor>();
 
@@ -36,10 +37,12 @@ public static class DependencyInjection
         if (provider.Equals("Gemini", StringComparison.OrdinalIgnoreCase))
         {
             services.AddScoped<ILLMProvider, GeminiLLMProvider>();
+            services.AddScoped<IResumeOptimizationProvider, GeminiResumeOptimizationProvider>();
         }
         else if (provider.Equals("Mock", StringComparison.OrdinalIgnoreCase))
         {
             services.AddScoped<ILLMProvider, MockLLMProvider>();
+            services.AddScoped<IResumeOptimizationProvider, MockResumeOptimizationProvider>();
         }
         else
         {
