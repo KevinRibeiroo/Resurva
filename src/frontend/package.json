@@ -8,14 +8,14 @@
     "build": "tsc -b && vite build"
   },
   "dependencies": {
-    "@types/react": "19.1.16",
-    "@types/react-dom": "19.1.9",
-    "@vitejs/plugin-react": "5.0.4",
-    "firebase": "12.18.0",
-    "react": "19.1.1",
-    "react-dom": "19.1.1",
-    "typescript": "5.9.2",
-    "vite": "7.1.7"
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "firebase": "^12.18.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "typescript": "^5.9.2",
+    "vite": "^8.2.2"
   },
   "engines": {
     "node": ">=20.19"

@@ -75,9 +75,28 @@ public sealed class ResumeMatcherApiFactory : WebApplicationFactory<Program>
                 configuration.SigningKeys.Add(SigningKey);
                 options.ConfigurationManager = new StaticConfigurationManager<OpenIdConnectConfiguration>(configuration);
             });
-            services.RemoveAll<DbContextOptions<ResumeMatcherDbContext>>();
-            services.RemoveAll<ResumeMatcherDbContext>();
-            services.AddDbContext<ResumeMatcherDbContext>(options => options.UseInMemoryDatabase(_databaseName));
+            var descriptorsToRemove = services
+                .Where(d => d.ServiceType.Namespace?.StartsWith("Npgsql") == true
+                         || d.ImplementationType?.Namespace?.StartsWith("Npgsql") == true
+                         || d.ServiceType.FullName?.Contains("ResumeMatcherDbContext") == true
+                         || d.ServiceType == typeof(DbContextOptions)
+                         || d.ServiceType == typeof(DbContextOptions<ResumeMatcherDbContext>)
+                         || d.ServiceType == typeof(ResumeMatcherDbContext))
+                .ToList();
+            foreach (var descriptor in descriptorsToRemove)
+            {
+                services.Remove(descriptor);
+            }
+
+            var inMemoryServiceProvider = new ServiceCollection()
+                .AddEntityFrameworkInMemoryDatabase()
+                .BuildServiceProvider();
+
+            services.AddDbContext<ResumeMatcherDbContext>(options =>
+            {
+                options.UseInMemoryDatabase(_databaseName);
+                options.UseInternalServiceProvider(inMemoryServiceProvider);
+            });
 
             services.RemoveAll<ILLMProvider>();
             services.AddSingleton<ILLMProvider>(_llmProvider);
