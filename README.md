@@ -23,10 +23,10 @@ Aplicação web para comparar um currículo com uma descrição de vaga e aprese
 
 | Área | Tecnologias |
 | --- | --- |
-| Backend | C# 12, .NET 8, ASP.NET Core Web API |
-| Persistência | Entity Framework Core 8, Npgsql e PostgreSQL |
+| Backend | C# 14, .NET 10, ASP.NET Core Web API |
+| Persistência | Entity Framework Core 10, Npgsql e PostgreSQL |
 | Extração de documentos | PdfPig e Open XML SDK |
-| Frontend | React 19, TypeScript 5.9 e Vite 7 |
+| Frontend | React 19.2, TypeScript 5.9 e Vite 8 |
 | Testes | xUnit, Microsoft.NET.Test.Sdk e coverlet |
 | IA | Abstração `ILLMProvider`; providers `MockLLMProvider` e `GeminiLLMProvider` |
 
