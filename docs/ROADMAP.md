@@ -27,9 +27,10 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 - [x] Aplicar integralmente a convenção de arquivos `Entity`, `Model` e interfaces `I...`.
 - [ ] Separar tipos públicos que ainda estejam agrupados em arquivos genéricos.
 - [ ] Adicionar análise estática, formatação e validações no build.
-- [ ] Atualizar o Vite: auditoria de 06/09/2026 apontou seis alertas (três altos, três moderados) na versão 7.1.7 já existente. O frontend publicado é estático; não exponha o servidor de desenvolvimento.
+- [x] Atualizar o Vite: atualizado para Vite 8.2.2 e React 19.2.8.
 - [x] Criar testes de integração para os endpoints HTTP.
 - [x] Versionar CI para build/testes backend e typecheck/build frontend, com PostgreSQL descartável.
+- [x] Automatizar CD do frontend no Firebase Hosting via GitHub Actions ao mergear na `develop`.
 - [ ] Publicar/validar o workflow no GitHub e ativar checks obrigatórios/proteção das branches.
 - [ ] Adicionar testes de comportamento do frontend.
 

@@ -1,19 +1,21 @@
 # Integração contínua
 
-Workflow: `.github/workflows/ci.yml`. Não publica aplicações, altera a GCP nem acessa segredos reais. O deploy do Cloud Build continua independente.
+Workflow: `.github/workflows/ci.yml`. Valida o backend (.NET 10) e frontend (React 19.2/Vite 8), e automatiza a publicação do frontend no Firebase Hosting ao realizar merge na `develop`. O deploy do backend pelo Cloud Build continua independente.
 
 ## Execução
 
-- `pull_request` para `develop` e `main`: valida a integração antes do merge.
-- `push` nessas branches: verifica o estado integrado.
+- `pull_request` para `develop` e `main`: valida a integração antes do merge (não publica o frontend).
+- `push` na `develop`: executa os testes/builds e, se aprovados, executa o job `deploy-frontend` para o Firebase Hosting no canal live.
+- `push` na `main`: executa verificação de integração.
 - `workflow_dispatch`: execução manual.
 - Execuções anteriores do mesmo PR/branch são canceladas quando substituídas.
-- Token limitado a `contents: read`; checkout não persiste credenciais; Actions fixadas por SHA.
+- Token limitado a `contents: read`; checkout não persiste credenciais; Actions fixadas por SHA/versão.
 
 | Check | Conteúdo |
 | --- | --- |
 | Backend build and tests | .NET 10, restore, build Release, testes unitários/HTTP e PostgreSQL descartável 18 |
-| Frontend typecheck and build | Node 24, pnpm 11.19.0, lockfile congelado, TypeScript e build Vite |
+| Frontend typecheck and build | Node 24, pnpm 12.3.4, lockfile congelado, TypeScript e build Vite |
+| Deploy frontend to Firebase Hosting | Executado exclusivamente em `push` na `develop` após aprovação dos checks anteriores |
 
 Não há suíte de comportamento do frontend nesta etapa. Typecheck/build não substituem testes de login/upload/resultados no navegador. Nenhum limite arbitrário de cobertura foi introduzido.
 
@@ -39,4 +41,26 @@ As configurações remotas não foram alteradas. Não foi definida quantidade de
 
 Merge aprovado gera push na `develop`, acionando o gatilho existente do Cloud Build. O CI de `push` não bloqueia esse gatilho: se alguém contornar a proteção e fizer push direto, o deploy poderá começar antes dos testes. Para este desenho, manter a proteção efetiva é obrigatório. Um gate também após o merge exige evolução explícita da coordenação do deploy, não um segundo pipeline concorrente.
 
-Referências: [build/test .NET](https://docs.github.com/en/actions/tutorials/build-and-test-code/net), [PostgreSQL no CI](https://docs.github.com/en/actions/tutorials/use-containerized-services/create-postgresql-service-containers) e [checks obrigatórios](https://docs.github.com/en/pull-requests/reference/status-checks).
+## Configuração do deploy automático do Frontend (Firebase)
+
+Para que o job `deploy-frontend` publique no Firebase Hosting, é necessário cadastrar o segredo `FIREBASE_SERVICE_ACCOUNT_RESUME_MATCHER_F61DF` no GitHub:
+
+1. **Via Firebase CLI (automático):**
+   ```powershell
+   cd src/frontend
+   npx -y firebase-tools init hosting:github
+   ```
+   - Responda `KevinRibeiroo/ResumeMatcher` para o repositório.
+   - Responda `N` para rodar script de build antes de cada deploy (já gerenciado pelo workflow).
+   - Responda `Y` para deploy automático no canal live ao mergear.
+   - Indique a branch `develop`. O CLI cria a Service Account na GCP e salva o secret automaticamente no GitHub.
+
+2. **Manualmente pelo Console da GCP:**
+   - Acesse o Console da GCP no projeto `resume-matcher-f61df` ➔ **IAM e Administração** ➔ **Contas de serviço**.
+   - Crie uma conta de serviço com a role `Administrador do Firebase Hosting` (`roles/firebasehosting.admin`).
+   - Crie uma chave no formato JSON e faça o download.
+   - No GitHub, acesse **Settings** ➔ **Secrets and variables** ➔ **Actions** ➔ **New repository secret**:
+     - Nome: `FIREBASE_SERVICE_ACCOUNT_RESUME_MATCHER_F61DF`
+     - Valor: Conteúdo integral do arquivo JSON da chave.
+
+Referências: [build/test .NET](https://docs.github.com/en/actions/tutorials/build-and-test-code/net), [PostgreSQL no CI](https://docs.github.com/en/actions/tutorials/use-containerized-services/create-postgresql-service-containers), [checks obrigatórios](https://docs.github.com/en/pull-requests/reference/status-checks) e [action-hosting-deploy](https://github.com/FirebaseExtended/action-hosting-deploy).

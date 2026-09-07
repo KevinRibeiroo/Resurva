@@ -53,6 +53,10 @@ Para um ambiente pessoal no Cloud Run:
 
 A API aplica migrations ao iniciar. Isso é aceitável para o primeiro ambiente privado com uma única instância. Antes de executar várias réplicas ou promover para produção, mova a aplicação de migrations para uma etapa única e controlada do deploy.
 
+## Publicação do Frontend (Firebase Hosting)
+
+A publicação do frontend no canal live (`resume-matcher-f61df.web.app`) é automatizada pelo GitHub Actions ao realizar o merge de um Pull Request na branch `develop` (job `deploy-frontend`). A publicação só é acionada após a aprovação de todos os testes e builds. Consulte [CI](CI.md) para a configuração do segredo `FIREBASE_SERVICE_ACCOUNT_RESUME_MATCHER_F61DF`. Para publicação manual sob demanda, execute `cd src/frontend && npx -y firebase-tools deploy --only hosting`.
+
 ## Verificação
 
 Depois da publicação:
