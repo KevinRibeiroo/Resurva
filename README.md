@@ -17,6 +17,9 @@ Aplicação web para comparar um currículo com uma descrição de vaga e aprese
 - Health check do banco, limite de requisições e limites de entrada.
 - Interface web para upload e visualização da análise.
 - Login Google via Firebase Authentication, com acesso restrito a uma conta autorizada na API.
+- Isolamento de currículos, análises e cache pelo UID autenticado.
+- Expiração de acesso após 30 dias desde a última atualização e comando de limpeza física (agendamento externo pendente).
+- Workflow CI de build/testes do backend e typecheck/build do frontend (proteção das branches depende de ativação no GitHub).
 - Validação de segurança para impedir sugestões que adicionem informações não confirmadas.
 
 ## Tecnologias
@@ -78,7 +81,7 @@ ResumeProject/
 
 ## Pré-requisitos
 
-- [.NET SDK 8](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [.NET SDK 10](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [Node.js 20.19 ou superior](https://nodejs.org/)
 - [pnpm](https://pnpm.io/installation)
 - [PostgreSQL](https://www.postgresql.org/download/) com um banco chamado `resumematcher`
@@ -188,6 +191,8 @@ pnpm build
 - [Publicação privada e configuração](docs/DEPLOYMENT.md)
 - [Contexto para manutenção e continuidade](AGENTS.md)
 - [Autenticação Google e ativação no Cloud Run](docs/AUTHENTICATION.md)
+- [Isolamento, retenção e exclusão](docs/DATA_PRIVACY.md)
+- [CI e proteção das branches](docs/CI.md)
 
 ## Uso responsável
 

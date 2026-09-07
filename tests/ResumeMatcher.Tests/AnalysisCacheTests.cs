@@ -76,17 +76,42 @@ public sealed class AnalysisCacheTests
         Assert.Equal(2, analysisRepository.Count);
     }
 
+    [Fact]
+    public async Task ConcurrentIdenticalInputsFromDifferentOwnersDoNotShareInFlightWork()
+    {
+        var a = CreateResume();
+        var b = CreateResume();
+        var repositoryA = new FakeAnalysisRepository();
+        var repositoryB = new FakeAnalysisRepository();
+        var llmA = new CountingLLMProvider(TimeSpan.FromMilliseconds(100));
+        var llmB = new CountingLLMProvider(TimeSpan.FromMilliseconds(100));
+        var serviceA = CreateService(a, repositoryA, llmA, owner: "parallel-owner-a");
+        var serviceB = CreateService(b, repositoryB, llmB, owner: "parallel-owner-b");
+        var results = await Task.WhenAll(
+            serviceA.CompareAsync(new(a.Id, "Identical concurrent job"), CancellationToken.None),
+            serviceB.CompareAsync(new(b.Id, "Identical concurrent job"), CancellationToken.None));
+        Assert.NotEqual(results[0].Id, results[1].Id);
+        Assert.Equal(a.Id, results[0].ResumeId);
+        Assert.Equal(b.Id, results[1].ResumeId);
+        Assert.Equal(1, llmA.CallCount);
+        Assert.Equal(1, llmB.CallCount);
+        Assert.Equal("parallel-owner-a", repositoryA.Single.OwnerUserId);
+        Assert.Equal("parallel-owner-b", repositoryB.Single.OwnerUserId);
+    }
+
     private static AnalysisService CreateService(
         ResumeEntity resume,
         FakeAnalysisRepository analysisRepository,
         CountingLLMProvider llmProvider,
-        IOptions<ScoringOptions>? scoringOptions = null)
+        IOptions<ScoringOptions>? scoringOptions = null,
+        string owner = "synthetic-owner-uid")
     {
         return new AnalysisService(
             new FakeResumeRepository(resume),
             analysisRepository,
             llmProvider,
             new FixedScoringEngine(),
+            new TestCurrentUser(owner),
             scoringOptions);
     }
 

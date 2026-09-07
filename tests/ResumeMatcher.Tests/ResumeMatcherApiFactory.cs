@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
@@ -27,17 +28,19 @@ public sealed class ResumeMatcherApiFactory : WebApplicationFactory<Program>
     private readonly CountingLLMProvider _llmProvider = new();
 
     public int LlmCallCount => _llmProvider.CallCount;
+    public TestTimeProvider Clock { get; } = new();
 
-    public HttpClient CreateAuthenticatedClient()
+    public HttpClient CreateAuthenticatedClient(string subject = "synthetic-owner-uid")
     {
         var client = CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CreateToken());
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", CreateToken(subject: subject));
         return client;
     }
 
     public static string CreateToken(string email = AllowedEmail, bool verified = true,
         string? issuer = null, string? audience = null, bool expired = false,
-        bool validSignature = true, string provider = "google.com", bool futureAuth = false, bool emptySubject = false)
+        bool validSignature = true, string provider = "google.com", bool futureAuth = false, bool emptySubject = false,
+        string subject = "synthetic-owner-uid")
     {
         var now = DateTime.UtcNow;
         var issuedAt = expired ? now.AddHours(-2) : now.AddMinutes(-1);
@@ -46,7 +49,7 @@ public sealed class ResumeMatcherApiFactory : WebApplicationFactory<Program>
             audience ?? FirebaseProjectId, null, issuedAt,
             expired ? now.AddHours(-1) : now.AddHours(1), issuedAt)
         {
-            ["sub"] = emptySubject ? "" : "synthetic-owner-uid",
+            ["sub"] = emptySubject ? "" : subject,
             ["email"] = email,
             ["email_verified"] = verified,
             ["auth_time"] = new DateTimeOffset(futureAuth ? now.AddHours(1) : issuedAt).ToUnixTimeSeconds(),
@@ -59,8 +62,11 @@ public sealed class ResumeMatcherApiFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+        builder.ConfigureLogging(logging => logging.ClearProviders().AddConsole());
         builder.ConfigureServices(services =>
         {
+            services.RemoveAll<TimeProvider>();
+            services.AddSingleton<TimeProvider>(Clock);
             services.Configure<FirebaseAuthOptions>(options =>
             {
                 options.ProjectId = FirebaseProjectId;
