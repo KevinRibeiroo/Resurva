@@ -74,7 +74,7 @@ export function App() {
           {optError && <p role="alert" className="error">{optError}</p>}
         </div>
       ) : (
-        <OptimizationView plan={optimizationPlan} />
+        <OptimizationView plan={optimizationPlan} onBack={() => setOptimizationPlan(null)} />
       )}
     </div>}
   </main>

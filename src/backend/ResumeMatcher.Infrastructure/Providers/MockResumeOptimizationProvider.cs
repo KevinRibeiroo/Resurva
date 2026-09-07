@@ -6,8 +6,8 @@ namespace ResumeMatcher.Infrastructure;
 public sealed class MockResumeOptimizationProvider : IResumeOptimizationProvider
 {
     public string ModelName => "Mock-Optimization-Engine";
-    public string ConfigurationFingerprint => "mock-v1";
-    public string PromptVersion => "v1-opt";
+    public string ConfigurationFingerprint => "mock-v2";
+    public string PromptVersion => "v2-opt";
 
     public Task<IReadOnlyList<OptimizationSuggestionModel>> GenerateSuggestionsAsync(
         string resumeText,
@@ -52,7 +52,7 @@ public sealed class MockResumeOptimizationProvider : IResumeOptimizationProvider
             }
         }
 
-        // 2. NeedsConfirmation Suggestion: Skill or requirement missing from resume
+        // 2. NeedsConfirmation (Simple): Skill or requirement missing from resume
         var firstMissing = comparisonContext.MissingSkills.FirstOrDefault()
             ?? comparisonContext.RequirementsMissing.FirstOrDefault();
 
@@ -65,16 +65,27 @@ public sealed class MockResumeOptimizationProvider : IResumeOptimizationProvider
             ProposedText: $"Conhecimento prático e aplicação de {missingName} em projetos de software.",
             Reason: $"A descrição da vaga enfatiza {missingName}, que não estava explicitamente citado no currículo.",
             Evidence: null,
-            ConfirmationQuestion: $"Você possui conhecimento ou experiência com {missingName}?"));
+            ConfirmationQuestion: $"Você possui conhecimento ou experiência prática com {missingName}?"));
 
-        // 3. Forbidden Suggestion: Fabrication of credentials or managerial scope
+        // 3. NeedsConfirmation (Contextual): Responsibility / Leadership / Peer mentoring not detailed in resume
+        suggestions.Add(new OptimizationSuggestionModel(
+            Id: Guid.NewGuid(),
+            Level: OptimizationSafetyLevel.NeedsConfirmation,
+            Confirmed: false,
+            OriginalText: "",
+            ProposedText: "Atuação em facilitação técnica e orientação de colegas em boas práticas de engenharia de software.",
+            Reason: "A vaga valoriza perfil colaborativo e mentoria técnica; a ausência documental não impede a inclusão caso você confirme essa responsabilidade.",
+            Evidence: null,
+            ConfirmationQuestion: "Você já realizou atividades de facilitação técnica, code review ou mentoria de colegas? Se sim, confirme e descreva sua vivência real."));
+
+        // 4. Forbidden Suggestion: Fabrication of credentials or fraudulent claims
         suggestions.Add(new OptimizationSuggestionModel(
             Id: Guid.NewGuid(),
             Level: OptimizationSafetyLevel.Forbidden,
             Confirmed: false,
             OriginalText: "",
-            ProposedText: "Liderança de equipe técnica de 15 engenheiros e gestão orçamentária anual de R$ 3 milhões.",
-            Reason: "Alegação de escopo de liderança executiva sem qualquer base factual no documento original.",
+            ProposedText: "Declarar posse de certificação oficial AWS Solutions Architect Professional mesmo sem ter realizado a prova de certificação.",
+            Reason: "Fabricação deliberada de certificação não obtida. Não é permitido incluir dados inverídicos no currículo.",
             Evidence: null,
             ConfirmationQuestion: null));
 

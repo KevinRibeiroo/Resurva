@@ -6,4 +6,6 @@ public sealed record AppliedOptimizationItemModel(
     string OriginalText,
     string ProposedText,
     string Reason,
-    bool WasConfirmed);
+    bool WasConfirmed,
+    string InformationOrigin,
+    string? UserDeclaration = null);

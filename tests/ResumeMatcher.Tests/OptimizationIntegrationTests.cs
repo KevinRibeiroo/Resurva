@@ -74,10 +74,50 @@ public sealed class OptimizationIntegrationTests
             Assert.DoesNotContain(result.AppliedChanges, c => c.SuggestionId == forbidden.Id);
         }
 
-        // 5. Applying again with outdated version / conflict returns 409 Conflict
+        // 5. Export to PDF and DOCX
+        var exportPdfResponse = await client.GetAsync($"/api/optimizations/{plan.Id}/export?format=pdf");
+        Assert.Equal(HttpStatusCode.OK, exportPdfResponse.StatusCode);
+        Assert.Equal("application/pdf", exportPdfResponse.Content.Headers.ContentType?.MediaType);
+        var pdfBytes = await exportPdfResponse.Content.ReadAsByteArrayAsync();
+        Assert.True(pdfBytes.Length > 0);
+
+        var exportDocxResponse = await client.GetAsync($"/api/optimizations/{plan.Id}/export?format=docx");
+        Assert.Equal(HttpStatusCode.OK, exportDocxResponse.StatusCode);
+        Assert.Equal("application/vnd.openxmlformats-officedocument.wordprocessingml.document", exportDocxResponse.Content.Headers.ContentType?.MediaType);
+        var docxBytes = await exportDocxResponse.Content.ReadAsByteArrayAsync();
+        Assert.True(docxBytes.Length > 0);
+
+        // 6. Export with unsupported format returns 400
+        var badFormatResponse = await client.GetAsync($"/api/optimizations/{plan.Id}/export?format=txt");
+        Assert.Equal(HttpStatusCode.BadRequest, badFormatResponse.StatusCode);
+
+        // 7. Applying again with outdated version / conflict returns 409 Conflict
         var conflictRequest = new ApplyOptimizationRequestModel(plan.Version, [new(Guid.NewGuid(), Accepted: false)]);
         var conflictResponse = await client.PostAsJsonAsync($"/api/optimizations/{plan.Id}/apply", conflictRequest);
         Assert.Equal(HttpStatusCode.Conflict, conflictResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Export_Before_Applying_Returns_Conflict()
+    {
+        await using var factory = new ResumeMatcherApiFactory();
+        using var client = factory.CreateAuthenticatedClient();
+
+        var resume = await SeedResumeAsync(factory.Services);
+        var compareResponse = await client.PostAsJsonAsync("/api/analysis/compare", new
+        {
+            resumeId = resume.Id,
+            jobDescription = "Vaga C# Backend."
+        });
+        var analysis = await compareResponse.Content.ReadFromJsonAsync<AnalysisResultModel>();
+        Assert.NotNull(analysis);
+
+        var planResponse = await client.PostAsync($"/api/analysis/{analysis.Id}/optimization", null);
+        var plan = await planResponse.Content.ReadFromJsonAsync<OptimizationPlanModel>();
+        Assert.NotNull(plan);
+
+        var exportResponse = await client.GetAsync($"/api/optimizations/{plan.Id}/export?format=pdf");
+        Assert.Equal(HttpStatusCode.Conflict, exportResponse.StatusCode);
     }
 
     [Fact]

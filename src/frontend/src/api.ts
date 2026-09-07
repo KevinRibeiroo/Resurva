@@ -64,3 +64,27 @@ export async function applyOptimization(
     body: JSON.stringify({ version, decisions })
   }))
 }
+
+export async function downloadAdaptedResume(id: string, format: 'pdf' | 'docx'): Promise<void> {
+  const response = await authenticatedFetch(`/api/optimizations/${id}/export?format=${format}`, {
+    method: 'GET'
+  })
+
+  if (!response.ok) {
+    if (response.status === 401) throw new Error('Sua sessão não foi aceita. Saia e entre novamente.')
+    if (response.status === 403) throw new Error('Esta conta não tem acesso ao ambiente de testes.')
+    if (response.status === 409) throw new Error('O currículo precisa ser adaptado e aplicado antes da exportação.')
+    const problem = await response.json().catch(() => null)
+    throw new Error(problem?.detail ?? problem?.title ?? 'Falha ao baixar o currículo adaptado.')
+  }
+
+  const blob = await response.blob()
+  const downloadUrl = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = downloadUrl
+  a.download = `curriculo-adaptado.${format}`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  window.URL.revokeObjectURL(downloadUrl)
+}

@@ -8,4 +8,5 @@ public sealed record OptimizationPlanModel(
     string Status,
     string OriginalText,
     IReadOnlyList<OptimizationSuggestionModel> Suggestions,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string? AdaptedText = null);
