@@ -25,7 +25,8 @@ Contém os dados centrais usados pelo negócio:
 - currículo extraído;
 - análise persistida;
 - resultado da análise;
-- itens de evidência.
+- itens de evidência;
+- otimização e plano de adaptação (`ResumeOptimizationEntity`).
 
 Essa camada não deve depender de ASP.NET Core, Entity Framework, bibliotecas de documentos ou providers externos.
 
@@ -36,18 +37,21 @@ Contém os casos de uso e os contratos que isolam detalhes externos:
 - upload e validação do currículo;
 - coordenação da comparação;
 - cálculo ponderado da pontuação;
-- contratos de repositório, extração e provider de comparação;
-- regras de segurança para futuras otimizações.
+- contratos de repositório, extração e provider de comparação (`IResumeRepository`, `IAnalysisRepository`, `ILLMProvider`);
+- contratos e serviços de otimização responsável (`IResumeOptimizationService`, `IResumeOptimizationProvider`, `IResumeOptimizationRepository`, `IOptimizationSafetyValidator`);
+- validação de segurança e regras anti-alucinação no servidor (`Safe`, `NeedsConfirmation`, `Forbidden`).
 
 ### ResumeMatcher.Infrastructure
 
 Implementa os contratos da camada Application:
 
-- `ResumeMatcherDbContext` e repositórios com EF Core/PostgreSQL;
+- `ResumeMatcherDbContext` e repositórios com EF Core/PostgreSQL (`ResumeRepository`, `AnalysisRepository`, `ResumeOptimizationRepository`);
 - `PdfResumeTextExtractor` com PdfPig;
 - `DocxResumeTextExtractor` com Open XML SDK;
-- `MockLLMProvider`, usado para validar o pipeline sem API externa;
-- `GeminiLLMProvider`, provider real com modelo configurável via Google.GenAI;
+- `DocxResumeDocumentExporter` para exportação de currículos adaptados via Open XML SDK;
+- `PdfResumeDocumentExporter` para exportação de currículos adaptados via PdfPig com fontes TrueType embutidas;
+- `MockLLMProvider` e `MockResumeOptimizationProvider`, usados para validar o pipeline sem API externa;
+- `GeminiLLMProvider` e `GeminiResumeOptimizationProvider`, providers reais com modelo configurável via Google.GenAI;
 - `GeminiRequestExecutor`, responsável por timeout e retry limitado de falhas temporárias;
 - registro das dependências de infraestrutura.
 
@@ -175,7 +179,5 @@ Não introduza dependências de infraestrutura na camada Domain ou acesso direto
 - Ownership e cache isolados por UID estão implementados, mas a autorização continua limitada a uma conta. Cadastro multiusuário, encerramento de conta e modo visitante ainda precisam de fluxo próprio.
 - Revogação de sessão e desativação de conta no Firebase não são consultadas a cada requisição; um token já emitido pode continuar válido até expirar. A lista de acesso efetiva continua sendo a conta configurada na API.
 - Expiração de 30 dias implementada; agendamento da limpeza física e verificação da retenção de backups ainda pendentes.
-- Não há migração automática de dados legados do SQLite para PostgreSQL.
-- A otimização automática de currículo ainda não está disponível.
-- CI de build/testes está versionado; checks obrigatórios dependem da configuração GitHub. Deploy externo permanece no Cloud Build. Observabilidade operacional completa ainda pendente.
+- A adaptação responsável de currículo gera texto adaptado com revisão e confirmação explícita de itens sem evidência prévia; a exportação para PDF e DOCX está disponível diretamente pelo endpoint `GET /api/optimizations/{id}/export?format=pdf|docx`.
 - Testes HTTP usam banco isolado em memória e JWTs sintéticos. Teste separado usa PostgreSQL descartável real para migrations, constraints, cascata e retenção; executado obrigatoriamente pelo workflow CI.
