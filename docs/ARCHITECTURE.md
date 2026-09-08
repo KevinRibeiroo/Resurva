@@ -170,6 +170,8 @@ Não introduza dependências de infraestrutura na camada Domain ou acesso direto
 
 ## Decisões atuais
 
+A preservação do layout original está em [prova técnica local](RESUME_LAYOUT_PRESERVATION.md), isolada em `tools/layout_probe`. Não modifica os contratos nem a exportação atual da API; armazenamento do original e reflow continuam pendentes.
+
 - **Provider Mock por padrão:** permite validar extração, persistência, UI e pontuação sem custo externo.
 - **Gemini opcional:** integração real atrás do mesmo contrato, ativada somente por configuração.
 - **Score determinístico:** facilita testes e comparação de resultados.
