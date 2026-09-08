@@ -9,4 +9,6 @@ public sealed record OptimizationPlanModel(
     string OriginalText,
     IReadOnlyList<OptimizationSuggestionModel> Suggestions,
     DateTimeOffset CreatedAt,
-    string? AdaptedText = null);
+    string? AdaptedText = null,
+    IReadOnlyList<OptimizationDecisionModel>? AppliedDecisions = null,
+    IReadOnlyList<AppliedOptimizationItemModel>? AppliedChanges = null);
