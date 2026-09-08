@@ -17,13 +17,17 @@ public static class DependencyInjection
         services.AddScoped<IAccountDataService, AccountDataService>();
         services.AddScoped<IResumeRepository, ResumeRepository>();
         services.AddScoped<IAnalysisRepository, AnalysisRepository>();
+        services.AddScoped<IResumeOptimizationRepository, ResumeOptimizationRepository>();
         services.AddScoped<IResumeTextExtractor, PdfResumeTextExtractor>();
         services.AddScoped<IResumeTextExtractor, DocxResumeTextExtractor>();
+        services.AddScoped<IResumeDocumentExporter, DocxResumeDocumentExporter>();
+        services.AddScoped<IResumeDocumentExporter, PdfResumeDocumentExporter>();
 
         services.AddOptions<GeminiOptions>()
             .Bind(configuration.GetSection(GeminiOptions.SectionName))
             .Validate(options => !string.IsNullOrWhiteSpace(options.Provider), "LLM:Provider is required.")
             .Validate(options => !string.IsNullOrWhiteSpace(options.Model), "LLM:Model is required.")
+            .Validate(options => !string.IsNullOrWhiteSpace(options.Location), "LLM:Location is required.")
             .Validate(options => options.Temperature is >= 0 and <= 2, "LLM:Temperature must be between 0 and 2.")
             .Validate(options => options.TimeoutSeconds is >= 1 and <= 300, "LLM:TimeoutSeconds must be between 1 and 300.")
             .Validate(options => options.MaxRetries is >= 0 and <= 3, "LLM:MaxRetries must be between 0 and 3.")
@@ -36,10 +40,12 @@ public static class DependencyInjection
         if (provider.Equals("Gemini", StringComparison.OrdinalIgnoreCase))
         {
             services.AddScoped<ILLMProvider, GeminiLLMProvider>();
+            services.AddScoped<IResumeOptimizationProvider, GeminiResumeOptimizationProvider>();
         }
         else if (provider.Equals("Mock", StringComparison.OrdinalIgnoreCase))
         {
             services.AddScoped<ILLMProvider, MockLLMProvider>();
+            services.AddScoped<IResumeOptimizationProvider, MockResumeOptimizationProvider>();
         }
         else
         {

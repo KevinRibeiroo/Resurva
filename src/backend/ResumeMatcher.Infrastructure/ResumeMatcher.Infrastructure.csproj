@@ -21,6 +21,11 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Exporters\Roboto-Regular.ttf" />
+    <EmbeddedResource Include="Exporters\Roboto-Bold.ttf" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>14</LangVersion>
