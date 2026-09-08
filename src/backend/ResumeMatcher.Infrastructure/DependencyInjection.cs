@@ -27,6 +27,7 @@ public static class DependencyInjection
             .Bind(configuration.GetSection(GeminiOptions.SectionName))
             .Validate(options => !string.IsNullOrWhiteSpace(options.Provider), "LLM:Provider is required.")
             .Validate(options => !string.IsNullOrWhiteSpace(options.Model), "LLM:Model is required.")
+            .Validate(options => !string.IsNullOrWhiteSpace(options.Location), "LLM:Location is required.")
             .Validate(options => options.Temperature is >= 0 and <= 2, "LLM:Temperature must be between 0 and 2.")
             .Validate(options => options.TimeoutSeconds is >= 1 and <= 300, "LLM:TimeoutSeconds must be between 1 and 300.")
             .Validate(options => options.MaxRetries is >= 0 and <= 3, "LLM:MaxRetries must be between 0 and 3.")
