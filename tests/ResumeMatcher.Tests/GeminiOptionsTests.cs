@@ -16,7 +16,7 @@ public sealed class GeminiOptionsTests
         Assert.Equal("gemini-3.5-flash", options.Model);
         Assert.Null(options.ApiKey);
         Assert.Null(options.ProjectId);
-        Assert.Equal("us-central1", options.Location);
+        Assert.Equal("southamerica-east1", options.Location);
         Assert.Equal(0.1, options.Temperature);
         Assert.Equal(60, options.TimeoutSeconds);
         Assert.Equal(1, options.MaxRetries);
