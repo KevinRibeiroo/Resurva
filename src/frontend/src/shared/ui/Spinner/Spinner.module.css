@@ -1,0 +1,92 @@
+.wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.spinner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pulseBg {
+  position: absolute;
+  inset: -4px;
+  border-radius: var(--radius-full);
+  background: rgba(99, 102, 241, 0.15);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.svg {
+  animation: rotate 1.8s linear infinite;
+  display: block;
+}
+
+.track {
+  stroke: rgba(148, 163, 184, 0.15);
+}
+
+.indicator {
+  stroke: var(--color-primary-container);
+  stroke-dasharray: 90, 150;
+  stroke-dashoffset: 0;
+  animation: dash 1.5s ease-in-out infinite;
+}
+
+.label {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+/* Sizes */
+.sm .svg {
+  width: 24px;
+  height: 24px;
+}
+
+.md .svg {
+  width: 48px;
+  height: 48px;
+}
+
+.lg .svg {
+  width: 72px;
+  height: 72px;
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}

@@ -1,0 +1,90 @@
+.container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.svg {
+  transform: rotate(-90deg);
+  display: block;
+}
+
+.track {
+  fill: transparent;
+  stroke: rgba(148, 163, 184, 0.12);
+}
+
+.indicator {
+  fill: transparent;
+}
+
+.animated {
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.centerContent {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+  font-family: var(--font-sans);
+}
+
+.scoreNumber {
+  color: var(--color-text-high);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.maxScore {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.sm .scoreNumber {
+  font-size: 1.375rem; /* 22px */
+}
+
+.sm .maxScore {
+  font-size: 0.625rem; /* 10px */
+  margin-top: 2px;
+}
+
+.md .scoreNumber {
+  font-size: 2rem; /* 32px */
+}
+
+.md .maxScore {
+  font-size: 0.75rem; /* 12px */
+  margin-top: 3px;
+}
+
+.lg .scoreNumber {
+  font-size: 2.75rem; /* 44px */
+}
+
+.lg .maxScore {
+  font-size: 0.875rem; /* 14px */
+  margin-top: 4px;
+}
+
+.emerald {
+  color: #f8fafc;
+}
+
+.amber {
+  color: #f8fafc;
+}
+
+.crimson {
+  color: #f8fafc;
+}

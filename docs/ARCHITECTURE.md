@@ -69,11 +69,17 @@ Implementa os contratos da camada Application:
 
 ### Frontend
 
-Aplicação React criada com Vite. Ela envia o currículo, solicita a comparação e apresenta o score geral, o detalhamento e as evidências retornadas pela API.
+Aplicação React 19 com TypeScript e Vite. Ela substitui a interface monolítica anterior por uma arquitetura modular baseada em feature slices, design tokens em CSS puro (Glass-Precision Neo-Dark), roteamento declarativo com React Router e testes automatizados com Vitest e React Testing Library.
 
-O `AuthGate` exige login Google pelo SDK Firebase e consulta `GET /api/auth/session` antes de exibir o formulário. Cada chamada obtém um ID token pelo SDK e o envia no header `Authorization`. A autorização efetiva fica na API, não no componente visual. As chaves públicas para validar a assinatura são descobertas via OIDC do Firebase e gerenciadas pelo middleware JWT do ASP.NET Core.
+Estrutura de organização:
+- `src/shared`: tokens de design (`tokens.css`), tipografia (`Plus Jakarta Sans`, `JetBrains Mono`), reset com scrollbars visíveis acessíveis e componentes atômicos reutilizáveis (`Button`, `Card`, `Badge`, `ScoreRing`, `Spinner`, `Alert`, `EmptyState`).
+- `src/app`: shell da aplicação, layout com topbar e badge do usuário (`AppLayout`), provedor de autenticação (`AuthProvider`) e roteamento declarativo (`AppRouter`).
+- `src/features/landing`: página institucional (`LandingPage`) com apresentação de valor, prévia ilustrativa identificada, fluxo em 3 passos e rodapé com avisos éticos.
+- `src/features/auth`: integração com Firebase Authentication (`LoginPage`, `AuthProtected`), barreira para conta aprovada e validação de sessão contra `/api/auth/session`.
+- `src/features/analysis`: dois pilares de entrada (`ResumeDropzone` e `JobDescriptionInput`), estado de processamento com telemetria real e resultado com diagnóstico das 5 dimensões e chips interativos de evidência (`NewAnalysisPage`, `AnalysisResultPage`).
+- `src/features/optimization`: validação ética factual (`OptimizationConfirmationsPage`), onde declarações do usuário substituem sugestões apenas com confirmação explícita (edições invalidam a confirmação), e comparação side-by-side com exportação autenticada para PDF e DOCX (`OptimizationAdaptationPage`).
 
-A política padrão e a política de fallback da API exigem assinatura, emissor, audiência e validade corretos, além de e-mail verificado, provider `google.com` e correspondência com um único `AllowedEmail` configurado. Uma configuração vazia impede a inicialização. O CORS é executado antes de autenticação e autorização para permitir o preflight das origens explicitamente cadastradas.
+Cada chamada autenticada obtém o ID token atualizado pelo SDK Firebase e o injeta no header `Authorization: Bearer <token>`. A autorização efetiva de acesso pertence exclusivamente à API backend. A suíte de testes unitários do frontend (`pnpm test`) é executada no CI antes da compilação de produção (`pnpm build`).
 
 ## Fluxo principal
 
