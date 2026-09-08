@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build"
+    "build": "tsc -b && vite build",
+    "test": "vitest run"
   },
   "dependencies": {
     "@types/react": "^19.2.18",
@@ -14,8 +15,17 @@
     "firebase": "^12.18.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-router-dom": "^7.1.5",
     "typescript": "^5.9.2",
     "vite": "^8.2.2"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22.13.4",
+    "jsdom": "^26.0.0",
+    "vitest": "^3.0.5"
   },
   "engines": {
     "node": ">=20.19"

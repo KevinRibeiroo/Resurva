@@ -1,0 +1,51 @@
+.card {
+  position: relative;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border-hairline);
+  transition: all 0.2s ease;
+}
+
+.surface {
+  background: var(--color-surface-card);
+}
+
+.glass {
+  background: rgba(26, 31, 44, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: var(--color-border-light);
+  box-shadow: var(--shadow-card);
+}
+
+.elevated {
+  background: var(--color-surface-hover);
+  box-shadow: var(--shadow-modal);
+  border-color: var(--color-border-light);
+}
+
+.glow {
+  background: var(--color-surface-card);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 0 32px -8px rgba(99, 102, 241, 0.25);
+}
+
+/* Padding options */
+.pad-none {
+  padding: 0;
+}
+
+.pad-sm {
+  padding: var(--space-sm);
+}
+
+.pad-md {
+  padding: var(--space-md);
+}
+
+.pad-lg {
+  padding: var(--space-lg);
+}
+
+.pad-xl {
+  padding: var(--space-xl);
+}
