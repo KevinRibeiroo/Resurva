@@ -297,6 +297,157 @@ public sealed class ResumeOptimizationServiceTests
             service.ApplyDecisionsAsync(plan.Id, new ApplyOptimizationCommand(1, conflictDecisions), CancellationToken.None));
     }
 
+    [Fact]
+    public async Task ApplyDecisions_WithOverlappingSubstitutions_TreatsOverlapsDeterministicallyWithoutCorruptingAdditions()
+    {
+        var resumeRepo = new InMemoryResumeRepository();
+        var analysisRepo = new InMemoryAnalysisRepository();
+        var optRepo = new InMemoryOptimizationRepository();
+
+        var resume = new ResumeEntity
+        {
+            Id = Guid.NewGuid(),
+            OwnerUserId = _currentUser.UserId,
+            FileName = "curriculo.pdf",
+            ContentType = "application/pdf",
+            ExtractedText = "Desenvolvedor Backend com sólida vivência em SQL Server corporativo.",
+            CreatedAt = _clock.GetUtcNow(),
+            UpdatedAt = _clock.GetUtcNow()
+        };
+        await resumeRepo.AddAsync(resume, CancellationToken.None);
+
+        var analysis = new AnalysisEntity
+        {
+            Id = Guid.NewGuid(),
+            OwnerUserId = _currentUser.UserId,
+            ResumeId = resume.Id,
+            JobDescription = "Vaga C# e PostgreSQL",
+            AnalysisInputHash = "hash-overlap",
+            ResultJson = JsonSerializer.Serialize(new AnalysisResultModel(
+                Guid.NewGuid(), resume.Id, 80, 80, 80, 80, 80, 80,
+                [], [], [], [], [], [], [])),
+            CreatedAt = _clock.GetUtcNow(),
+            UpdatedAt = _clock.GetUtcNow()
+        };
+        await analysisRepo.TryAddAsync(analysis, CancellationToken.None);
+
+        var id1 = Guid.NewGuid();
+        var id2 = Guid.NewGuid();
+
+        var fakeProvider = new FakeOptimizationProvider(
+        [
+            new OptimizationSuggestionModel(
+                id1,
+                OptimizationSafetyLevel.Safe,
+                false,
+                "vivência em SQL Server",
+                "vivência profunda em PostgreSQL",
+                "Foco em PostgreSQL",
+                "vivência em SQL Server",
+                null),
+            new OptimizationSuggestionModel(
+                id2,
+                OptimizationSafetyLevel.Safe,
+                false,
+                "SQL Server corporativo",
+                "bancos relacionais",
+                "Generalização de banco",
+                "SQL Server corporativo",
+                null)
+        ]);
+
+        var service = new ResumeOptimizationService(
+            resumeRepo, analysisRepo, optRepo, fakeProvider, _safetyValidator, _currentUser, _clock);
+
+        var plan = await service.CreatePlanAsync(analysis.Id, CancellationToken.None);
+
+        var decisions = new List<OptimizationDecisionModel>
+        {
+            new(id1, Accepted: true),
+            new(id2, Accepted: true)
+        };
+
+        var result = await service.ApplyDecisionsAsync(plan.Id, new ApplyOptimizationCommand(1, decisions), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Contains("vivência profunda em PostgreSQL", result.AdaptedText);
+        Assert.Contains("[Ajustes de redação com sobreposição textual pendentes de revisão manual]:", result.AdaptedText);
+        Assert.DoesNotContain("[Informações e Competências Adicionais Confirmadas]:", result.AdaptedText);
+    }
+
+    [Fact]
+    public async Task GetPlanAsync_WhenApplied_ReturnsDecisionsAndAppliedChanges()
+    {
+        var resumeRepo = new InMemoryResumeRepository();
+        var analysisRepo = new InMemoryAnalysisRepository();
+        var optRepo = new InMemoryOptimizationRepository();
+
+        var resume = new ResumeEntity
+        {
+            Id = Guid.NewGuid(),
+            OwnerUserId = _currentUser.UserId,
+            FileName = "curriculo.pdf",
+            ContentType = "application/pdf",
+            ExtractedText = "Experiência sólida com C# e Docker.",
+            CreatedAt = _clock.GetUtcNow(),
+            UpdatedAt = _clock.GetUtcNow()
+        };
+        await resumeRepo.AddAsync(resume, CancellationToken.None);
+
+        var analysis = new AnalysisEntity
+        {
+            Id = Guid.NewGuid(),
+            OwnerUserId = _currentUser.UserId,
+            ResumeId = resume.Id,
+            JobDescription = "Vaga C# e Docker",
+            AnalysisInputHash = "hash-getplan",
+            ResultJson = JsonSerializer.Serialize(new AnalysisResultModel(
+                Guid.NewGuid(), resume.Id, 80, 80, 80, 80, 80, 80,
+                [], [], [], [], [], [], [])),
+            CreatedAt = _clock.GetUtcNow(),
+            UpdatedAt = _clock.GetUtcNow()
+        };
+        await analysisRepo.TryAddAsync(analysis, CancellationToken.None);
+
+        var suggId = Guid.NewGuid();
+        var fakeProvider = new FakeOptimizationProvider(
+        [
+            new OptimizationSuggestionModel(
+                suggId,
+                OptimizationSafetyLevel.Safe,
+                false,
+                "C# e Docker",
+                "C# .NET 10 e contêineres Docker",
+                "Especificação de versão",
+                "C# e Docker",
+                null)
+        ]);
+
+        var service = new ResumeOptimizationService(
+            resumeRepo, analysisRepo, optRepo, fakeProvider, _safetyValidator, _currentUser, _clock);
+
+        var plan = await service.CreatePlanAsync(analysis.Id, CancellationToken.None);
+
+        var decisions = new List<OptimizationDecisionModel>
+        {
+            new(suggId, Accepted: true)
+        };
+
+        await service.ApplyDecisionsAsync(plan.Id, new ApplyOptimizationCommand(1, decisions), CancellationToken.None);
+
+        var retrievedPlan = await service.GetPlanAsync(plan.Id, CancellationToken.None);
+
+        Assert.NotNull(retrievedPlan);
+        Assert.Equal("Applied", retrievedPlan.Status);
+        Assert.NotNull(retrievedPlan.AdaptedText);
+        Assert.NotNull(retrievedPlan.AppliedDecisions);
+        Assert.Single(retrievedPlan.AppliedDecisions);
+        Assert.Equal(suggId, retrievedPlan.AppliedDecisions[0].SuggestionId);
+        Assert.NotNull(retrievedPlan.AppliedChanges);
+        Assert.Single(retrievedPlan.AppliedChanges);
+        Assert.Equal("C# .NET 10 e contêineres Docker", retrievedPlan.AppliedChanges[0].ProposedText);
+    }
+
     private sealed class FakeOptimizationProvider(IReadOnlyList<OptimizationSuggestionModel> suggestions) : IResumeOptimizationProvider
     {
         public string ModelName => "fake-opt-model";

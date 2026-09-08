@@ -27,7 +27,7 @@ dotnet run --project src/backend/ResumeMatcher.Api -- --purge-expired
 
 Na imagem já construída, passe `--purge-expired` ao entrypoint existente. Usa a connection string do ambiente e **apaga dados de verdade**. Revise alvo, migration, dados legados e backups antes de executar. Não há timer dependente de uma instância HTTP que pode escalar a zero.
 
-**Pendente operacional:** agendar a execução (por exemplo, Cloud Run Job + Cloud Scheduler), aprovar frequência/permissões e monitorar falhas. Nada foi criado na GCP nesta mudança. A expiração de acesso está no código, mas limpeza física automática depende desse agendamento. A latência entre expirar e apagar deve ser explicitada antes de prometer remoção física exata em 30 dias.
+**Agendamento operacional:** scripts versionados de automação estão disponíveis em `scripts/setup-retention-purge.ps1` e `scripts/setup-retention-purge.sh`. Eles criam o Cloud Run Job com `--purge-expired` e o Cloud Scheduler com periodicidade diária (03:00 UTC). A expiração de acesso está garantida no código pelas queries de leitura (`UpdatedAt > agora - 30 dias`), e a limpeza física diária é garantida por esse agendador.
 
 `IAccountDataService.DeleteAllAsync` prepara remoção transacional e idempotente dos registros do usuário atual, incluindo expirados, sem afetar outras contas. **Não é um endpoint de encerramento de conta e não apaga a identidade Firebase.** Não apresentar essa operação como exclusão completa: sessões válidas ainda poderiam criar novos dados.
 
