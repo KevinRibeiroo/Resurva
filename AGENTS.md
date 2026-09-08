@@ -23,6 +23,7 @@ O ResumeMatcher compara currículos em PDF/DOCX com descrições de vagas. Ele a
 - Workflow CI versionado para PRs/push em develop/main; ativação e checks obrigatórios no GitHub dependem de configuração externa. O gatilho de deploy não espera o CI pós-push.
 - Exclusão completa de conta Firebase pendente. Existe operação interna de apagar dados do usuário, sem endpoint de encerramento de conta.
 - Consulte `docs/ROADMAP.md` antes de afirmar que algo futuro já está disponível.
+- Preservação de layout: prova local em `tools/layout_probe`, sem integração à API ou armazenamento do original. Leia `docs/RESUME_LAYOUT_PRESERVATION.md`; não apresente a exportação atual como preservação do layout de entrada.
 
 ## Arquitetura
 
