@@ -1,0 +1,248 @@
+.centerContainer {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.headerBlock {
+  margin-bottom: var(--space-xl);
+}
+
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
+}
+
+.ethicalBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  background: var(--color-surface-low);
+}
+
+.shieldIconBox {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+  background: rgba(76, 215, 246, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cardsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-3xl);
+}
+
+.itemCard {
+  background: var(--color-surface-card);
+  box-shadow: var(--shadow-card);
+}
+
+.itemCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.indexTitleBox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.itemIndex {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-hover);
+  color: var(--color-primary);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contextGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-lowest);
+  margin-bottom: var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .contextGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.contextCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.questionSection {
+  margin-top: var(--space-sm);
+}
+
+.choicesList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.choiceOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-lowest);
+  border: 1px solid var(--color-border-hairline);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.choiceOption:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-light);
+}
+
+.choiceSelected {
+  border-color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.radioInput {
+  accent-color: var(--color-primary-container);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.choiceTextCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.declarationPanel {
+  margin-top: var(--space-xs);
+  margin-bottom: var(--space-xs);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-low);
+  border: 1px solid var(--color-border-light);
+  display: flex;
+  flex-direction: column;
+}
+
+.declTextarea {
+  width: 100%;
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-lowest);
+  color: var(--color-text-high);
+  border: 1px solid var(--color-border-hairline);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  resize: vertical;
+  margin-bottom: var(--space-sm);
+}
+
+.declTextarea:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+}
+
+.confirmCheckboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  cursor: pointer;
+}
+
+.confirmCheckboxLabel input {
+  accent-color: var(--color-primary-container);
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}
+
+.checkboxReminder {
+  font-size: 0.75rem;
+  color: var(--color-amber);
+  margin-top: 0.25rem;
+}
+
+/* Sticky Dock */
+.stickyDock {
+  position: sticky;
+  bottom: var(--space-md);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-xl);
+  background: rgba(26, 31, 44, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--shadow-modal);
+}
+
+@media (min-width: 768px) {
+  .stickyDock {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.dockProgressCol {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.ringMini {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-surface-hover);
+  border: 2px solid var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ringCount {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text-high);
+}
+
+.dockActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}

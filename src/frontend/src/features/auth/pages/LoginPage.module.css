@@ -1,0 +1,147 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: var(--color-bg);
+  padding: var(--space-md);
+  overflow: hidden;
+}
+
+.container {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.brandHeader {
+  text-align: center;
+  margin-bottom: var(--space-xl);
+}
+
+.logoBadge {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-md) auto;
+  box-shadow: var(--shadow-card);
+}
+
+.authCard {
+  width: 100%;
+}
+
+.checkingState {
+  padding: var(--space-2xl) 0;
+  display: flex;
+  justify-content: center;
+}
+
+.unauthorizedState {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  background: var(--color-surface-lowest);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-hairline);
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatarPlaceholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-primary-container);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.userDetails {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.userName {
+  color: var(--color-text-high);
+  font-size: 0.9375rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userEmail {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.instruction {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.actionsGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+.loginForm {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.loginIntro {
+  margin-bottom: var(--space-lg);
+}
+
+.googleButton {
+  width: 100%;
+  margin-bottom: var(--space-md);
+}
+
+.securityBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding-top: var(--space-xs);
+}
+
+.pageFooter {
+  margin-top: var(--space-xl);
+  text-align: center;
+}
