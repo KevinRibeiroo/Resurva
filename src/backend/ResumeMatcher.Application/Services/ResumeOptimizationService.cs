@@ -160,6 +160,16 @@ public sealed class ResumeOptimizationService(
 
         var suggestions = JsonSerializer.Deserialize<List<OptimizationSuggestionModel>>(entity.SuggestionsJson, JsonOptions) ?? [];
 
+        IReadOnlyList<OptimizationDecisionModel>? appliedDecisions = null;
+        IReadOnlyList<AppliedOptimizationItemModel>? appliedChanges = null;
+
+        if (entity.Status == "Applied" && !string.IsNullOrWhiteSpace(entity.DecisionsJson))
+        {
+            var snapshot = JsonSerializer.Deserialize<AppliedOptimizationSnapshot>(entity.DecisionsJson, JsonOptions);
+            appliedDecisions = snapshot?.Decisions;
+            appliedChanges = snapshot?.AppliedItems;
+        }
+
         return new OptimizationPlanModel(
             entity.Id,
             entity.AnalysisId,
@@ -169,7 +179,9 @@ public sealed class ResumeOptimizationService(
             entity.OriginalText,
             suggestions,
             entity.CreatedAt,
-            entity.AdaptedText);
+            entity.AdaptedText,
+            appliedDecisions,
+            appliedChanges);
     }
 
     public async Task<OptimizationResultModel> ApplyDecisionsAsync(
@@ -296,26 +308,54 @@ public sealed class ResumeOptimizationService(
 
     private static string ComposeAdaptedText(string originalText, IReadOnlyList<AppliedOptimizationItemModel> appliedItems)
     {
-        var result = originalText;
         var additions = new List<string>();
+        var overlappingOrUnmatched = new List<string>();
+        var scheduledReplacements = new List<(int Index, int Length, string ProposedText)>();
 
         foreach (var item in appliedItems)
         {
-            if (!string.IsNullOrWhiteSpace(item.OriginalText) && result.Contains(item.OriginalText, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(item.OriginalText))
             {
-                var index = result.IndexOf(item.OriginalText, StringComparison.OrdinalIgnoreCase);
-                if (index >= 0)
-                {
-                    result = string.Concat(
-                        result.AsSpan(0, index),
-                        item.ProposedText,
-                        result.AsSpan(index + item.OriginalText.Length));
-                }
+                if (!string.IsNullOrWhiteSpace(item.ProposedText))
+                    additions.Add(item.ProposedText);
+                continue;
             }
-            else if (!string.IsNullOrWhiteSpace(item.ProposedText))
+
+            var index = originalText.IndexOf(item.OriginalText, StringComparison.OrdinalIgnoreCase);
+            if (index < 0)
             {
-                additions.Add(item.ProposedText);
+                if (!string.IsNullOrWhiteSpace(item.ProposedText))
+                    overlappingOrUnmatched.Add(item.ProposedText);
+                continue;
             }
+
+            var length = item.OriginalText.Length;
+            var overlaps = scheduledReplacements.Any(r => index < r.Index + r.Length && r.Index < index + length);
+
+            if (overlaps)
+            {
+                if (!string.IsNullOrWhiteSpace(item.ProposedText))
+                    overlappingOrUnmatched.Add(item.ProposedText);
+            }
+            else
+            {
+                scheduledReplacements.Add((index, length, item.ProposedText));
+            }
+        }
+
+        var sb = new System.Text.StringBuilder(originalText);
+        foreach (var rep in scheduledReplacements.OrderByDescending(r => r.Index))
+        {
+            sb.Remove(rep.Index, rep.Length);
+            sb.Insert(rep.Index, rep.ProposedText);
+        }
+
+        var result = sb.ToString();
+
+        if (overlappingOrUnmatched.Count > 0)
+        {
+            result = $"{result.TrimEnd()}\n\n---\n[Ajustes de redação com sobreposição textual pendentes de revisão manual]:\n" +
+                     string.Join("\n", overlappingOrUnmatched.Select(a => $"• {a}"));
         }
 
         if (additions.Count > 0)

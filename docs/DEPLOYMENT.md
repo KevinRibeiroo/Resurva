@@ -51,7 +51,15 @@ Para um ambiente pessoal no Cloud Run:
 5. Verifique `/health` com autenticação Firebase. Mantenha probe TCP de inicialização; não configure probe HTTP anônima nesse endpoint protegido.
 6. Defina orçamento, alertas e cotas do Gemini antes de habilitar o provider real.
 
-A API aplica migrations ao iniciar. Isso é aceitável para o primeiro ambiente privado com uma única instância. Antes de executar várias réplicas ou promover para produção, mova a aplicação de migrations para uma etapa única e controlada do deploy.
+A API aplica migrations ao iniciar por padrão, aceitável para o ambiente privado de instância única. Para produção ou múltiplas réplicas, separe a execução com o comando `--migrate-only` executado no pipeline de deploy e configure `Database__AutoMigrate=false` no Cloud Run.
+
+## Purga periódica de retenção (30 dias)
+
+Para automatizar a execução periódica do comando de limpeza física (`--purge-expired`), utilize os scripts versionados de provisionamento:
+- PowerShell: `scripts/setup-retention-purge.ps1`
+- Bash: `scripts/setup-retention-purge.sh`
+
+Eles configuram um **Cloud Run Job** reutilizando a imagem da API e um **Cloud Scheduler** diário (03:00 UTC) chamando o Job com autenticação OIDC via Service Account dedicada.
 
 ## Publicação do Frontend (Firebase Hosting)
 

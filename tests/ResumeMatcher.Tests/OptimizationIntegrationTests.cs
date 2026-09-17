@@ -74,6 +74,18 @@ public sealed class OptimizationIntegrationTests
             Assert.DoesNotContain(result.AppliedChanges, c => c.SuggestionId == forbidden.Id);
         }
 
+        // 4b. GET applied plan returns AppliedDecisions and AppliedChanges
+        var getAppliedPlanResponse = await client.GetAsync($"/api/optimizations/{plan.Id}");
+        Assert.Equal(HttpStatusCode.OK, getAppliedPlanResponse.StatusCode);
+        var appliedPlan = await getAppliedPlanResponse.Content.ReadFromJsonAsync<OptimizationPlanModel>();
+        Assert.NotNull(appliedPlan);
+        Assert.Equal("Applied", appliedPlan.Status);
+        Assert.NotNull(appliedPlan.AdaptedText);
+        Assert.NotNull(appliedPlan.AppliedDecisions);
+        Assert.NotEmpty(appliedPlan.AppliedDecisions);
+        Assert.NotNull(appliedPlan.AppliedChanges);
+        Assert.NotEmpty(appliedPlan.AppliedChanges);
+
         // 5. Export to PDF and DOCX
         var exportPdfResponse = await client.GetAsync($"/api/optimizations/{plan.Id}/export?format=pdf");
         Assert.Equal(HttpStatusCode.OK, exportPdfResponse.StatusCode);

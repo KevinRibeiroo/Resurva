@@ -28,6 +28,8 @@ export interface OptimizationPlanModel {
   suggestions: OptimizationSuggestionModel[]
   createdAt: string
   adaptedText?: string | null
+  appliedDecisions?: OptimizationDecisionModel[] | null
+  appliedChanges?: AppliedOptimizationItemModel[] | null
 }
 
 export interface OptimizationDecisionModel {
