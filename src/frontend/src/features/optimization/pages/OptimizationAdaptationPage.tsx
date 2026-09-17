@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom'
 import { getOptimizationPlan, applyOptimization, exportAdaptedResume } from '../services/optimizationService'
 import {
@@ -15,6 +15,7 @@ import { Alert } from '../../../shared/ui/Alert/Alert'
 import { Spinner } from '../../../shared/ui/Spinner/Spinner'
 import { ApiError } from '../../../shared/api/httpClient'
 import styles from './OptimizationAdaptationPage.module.css'
+import { LayoutExportPanel } from '../components/LayoutExportPanel'
 
 export function OptimizationAdaptationPage() {
   const { optimizationId } = useParams<{ optimizationId: string }>()
@@ -54,6 +55,8 @@ export function OptimizationAdaptationPage() {
   const [exportingPdf, setExportingPdf] = useState<boolean>(false)
   const [exportingDocx, setExportingDocx] = useState<boolean>(false)
   const [copySuccess, setCopySuccess] = useState<boolean>(false)
+  const dockRef = useRef<HTMLDivElement>(null)
+  const [dockHeight, setDockHeight] = useState(0)
 
   // Fetch plan if accessed directly by URL
   useEffect(() => {
@@ -112,6 +115,18 @@ export function OptimizationAdaptationPage() {
   const isAlreadyApplied = plan?.status === 'Applied' && Boolean(plan?.adaptedText)
   const displayedAdaptedText = result?.adaptedText || (isAlreadyApplied ? plan?.adaptedText : null)
   const displayedAppliedChanges = result?.appliedChanges || (isAlreadyApplied ? plan?.appliedChanges : null) || []
+
+  // Reserve the actual wrapped dock height so it cannot hide export controls on narrow screens.
+  useLayoutEffect(() => {
+    const dock = dockRef.current
+    if (!dock) return
+    const measure = () => setDockHeight(dock.getBoundingClientRect().height)
+    measure()
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null
+    observer?.observe(dock)
+    window.addEventListener('resize', measure)
+    return () => { observer?.disconnect(); window.removeEventListener('resize', measure) }
+  }, [loading, plan?.id, Boolean(displayedAdaptedText)])
 
   function toggleSuggestionAccepted(id: string, accepted: boolean) {
     if (isAlreadyApplied) return
@@ -227,7 +242,7 @@ export function OptimizationAdaptationPage() {
   }
 
   return (
-    <div className="app-container" style={{ paddingTop: 'var(--space-xl)', paddingBottom: 'var(--space-3xl)' }}>
+    <div className="app-container" style={{ paddingTop: 'var(--space-xl)', paddingBottom: `calc(var(--space-xl) + ${dockHeight}px)` }}>
       {/* Top Header */}
       <div className={styles.topHeader}>
         <div className={styles.titleCol}>
@@ -529,7 +544,11 @@ export function OptimizationAdaptationPage() {
       </div>
 
       {/* Floating Bottom Master Action Bar */}
-      <div className={styles.masterDock}>
+      {import.meta.env.DEV && displayedAdaptedText && plan && (
+        <LayoutExportPanel key={`${plan.id}:${plan.version}`} optimizationId={plan.id} resumeId={plan.resumeId} />
+      )}
+
+      <div className={styles.masterDock} ref={dockRef}>
         <div className={styles.dockInfoCol}>
           <span className="material-symbols-outlined" style={{ color: 'var(--color-tertiary)', fontSize: '20px' }}>
             {displayedAdaptedText ? 'verified' : 'tune'}
@@ -569,7 +588,7 @@ export function OptimizationAdaptationPage() {
                 title="Baixar currículo no formato DOCX"
                 id="download-docx-btn"
               >
-                Baixar em DOCX
+                DOCX — modelo padrão
               </Button>
 
               <Button
@@ -581,7 +600,7 @@ export function OptimizationAdaptationPage() {
                 title="Baixar currículo formatado em PDF"
                 id="download-pdf-btn"
               >
-                Baixar Currículo Adaptado (PDF)
+                PDF — modelo padrão
               </Button>
             </>
           ) : (

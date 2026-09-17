@@ -138,8 +138,9 @@ describe('OptimizationAdaptationPage', () => {
     })
 
     // Export buttons appear
-    expect(screen.getByRole('button', { name: /Baixar Currículo Adaptado \(PDF\)/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Baixar em DOCX/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /PDF — modelo padrão/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /DOCX — modelo padrão/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /DOCX com layout original/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Copiar Texto Completo/i })).toBeInTheDocument()
   })
 
@@ -207,10 +208,10 @@ describe('OptimizationAdaptationPage', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Baixar Currículo Adaptado \(PDF\)/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /PDF — modelo padrão/i })).toBeInTheDocument()
     })
 
-    const pdfBtn = screen.getByRole('button', { name: /Baixar Currículo Adaptado \(PDF\)/i })
+    const pdfBtn = screen.getByRole('button', { name: /PDF — modelo padrão/i })
     fireEvent.click(pdfBtn)
 
     await waitFor(() => {
@@ -240,10 +241,10 @@ describe('OptimizationAdaptationPage', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Baixar em DOCX/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /DOCX — modelo padrão/i })).toBeInTheDocument()
     })
 
-    const docxBtn = screen.getByRole('button', { name: /Baixar em DOCX/i })
+    const docxBtn = screen.getByRole('button', { name: /DOCX — modelo padrão/i })
     fireEvent.click(docxBtn)
 
     await waitFor(() => {
