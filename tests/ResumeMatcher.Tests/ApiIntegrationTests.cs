@@ -108,6 +108,42 @@ public sealed class ApiIntegrationTests
         Assert.Equal(HttpStatusCode.NotFound, getAnalysisResponse.StatusCode);
     }
 
+    [Fact]
+    public async Task SecurityHeadersArePresentOnResponses()
+    {
+        await using var factory = new ResumeMatcherApiFactory();
+        using var client = factory.CreateAuthenticatedClient();
+
+        var response = await client.GetAsync("/health");
+
+        Assert.True(response.Headers.Contains("X-Content-Type-Options"));
+        Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").First());
+        Assert.True(response.Headers.Contains("X-Frame-Options"));
+        Assert.Equal("DENY", response.Headers.GetValues("X-Frame-Options").First());
+        Assert.True(response.Headers.Contains("Referrer-Policy"));
+        Assert.Equal("strict-origin-when-cross-origin", response.Headers.GetValues("Referrer-Policy").First());
+    }
+
+    [Fact]
+    public async Task RateLimiterIsPartitionedByUserSubject()
+    {
+        await using var factory = new ResumeMatcherApiFactory();
+        using var clientUser1 = factory.CreateAuthenticatedClient(subject: "user-1");
+        using var clientUser2 = factory.CreateAuthenticatedClient(subject: "user-2");
+
+        for (var i = 0; i < 20; i++)
+        {
+            var res = await clientUser1.GetAsync($"/api/analysis/{Guid.NewGuid()}");
+            Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+        }
+
+        var throttled = await clientUser1.GetAsync($"/api/analysis/{Guid.NewGuid()}");
+        Assert.Equal(HttpStatusCode.TooManyRequests, throttled.StatusCode);
+
+        var user2Response = await clientUser2.GetAsync($"/api/analysis/{Guid.NewGuid()}");
+        Assert.Equal(HttpStatusCode.NotFound, user2Response.StatusCode);
+    }
+
     private static async Task<ResumeEntity> SeedResumeAsync(IServiceProvider services)
     {
         await using var scope = services.CreateAsyncScope();

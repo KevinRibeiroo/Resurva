@@ -90,13 +90,19 @@ export function OptimizationAdaptationPage() {
     if (Object.keys(decisions).length > 0) return
 
     const initial: Record<string, OptimizationDecisionModel> = {}
-    for (const s of plan.suggestions) {
-      const level = normalizeSafetyLevel(s.level)
-      if (level === 'Safe') {
-        initial[s.id] = { suggestionId: s.id, accepted: true, confirmed: false }
-      } else {
-        // NeedsConfirmation and Forbidden start unaccepted
-        initial[s.id] = { suggestionId: s.id, accepted: false, confirmed: false }
+    if (plan.status === 'Applied' && plan.appliedDecisions && plan.appliedDecisions.length > 0) {
+      for (const d of plan.appliedDecisions) {
+        initial[d.suggestionId] = d
+      }
+    } else {
+      for (const s of plan.suggestions) {
+        const level = normalizeSafetyLevel(s.level)
+        if (level === 'Safe') {
+          initial[s.id] = { suggestionId: s.id, accepted: true, confirmed: false }
+        } else {
+          // NeedsConfirmation and Forbidden start unaccepted
+          initial[s.id] = { suggestionId: s.id, accepted: false, confirmed: false }
+        }
       }
     }
     setDecisions(initial)
@@ -105,8 +111,10 @@ export function OptimizationAdaptationPage() {
   // If already applied (loaded from GET or freshly applied)
   const isAlreadyApplied = plan?.status === 'Applied' && Boolean(plan?.adaptedText)
   const displayedAdaptedText = result?.adaptedText || (isAlreadyApplied ? plan?.adaptedText : null)
+  const displayedAppliedChanges = result?.appliedChanges || (isAlreadyApplied ? plan?.appliedChanges : null) || []
 
   function toggleSuggestionAccepted(id: string, accepted: boolean) {
+    if (isAlreadyApplied) return
     setDecisions((prev) => ({
       ...prev,
       [id]: {
@@ -365,13 +373,13 @@ export function OptimizationAdaptationPage() {
                   data-testid="adapted-text-output"
                 />
 
-                {result && result.appliedChanges.length > 0 && (
+                {displayedAppliedChanges.length > 0 && (
                   <div className={styles.changesSummaryBlock}>
                     <span className="font-label-caps" style={{ color: 'var(--color-text-muted)', display: 'block', marginBottom: 'var(--space-xs)' }}>
-                      Alterações incorporadas nesta versão ({result.appliedChanges.length}):
+                      Alterações incorporadas nesta versão ({displayedAppliedChanges.length}):
                     </span>
                     <ul className={styles.appliedChangesList}>
-                      {result.appliedChanges.map((change) => {
+                      {displayedAppliedChanges.map((change) => {
                         const level = normalizeSafetyLevel(change.level)
                         const isUserDeclared = change.informationOrigin === 'DeclaradaPeloUsuario'
                         return (
@@ -455,7 +463,7 @@ export function OptimizationAdaptationPage() {
                                 isAccepted ? styles.toggleBtnActiveAccept : ''
                               }`}
                               onClick={() => toggleSuggestionAccepted(suggestion.id, true)}
-                              disabled={applying}
+                              disabled={applying || isAlreadyApplied}
                             >
                               Aceitar
                             </button>
@@ -465,7 +473,7 @@ export function OptimizationAdaptationPage() {
                                 !isAccepted ? styles.toggleBtnActiveReject : ''
                               }`}
                               onClick={() => toggleSuggestionAccepted(suggestion.id, false)}
-                              disabled={applying}
+                              disabled={applying || isAlreadyApplied}
                             >
                               Rejeitar
                             </button>
@@ -536,6 +544,12 @@ export function OptimizationAdaptationPage() {
         <div className={styles.dockButtonsCol}>
           {displayedAdaptedText ? (
             <>
+              <Link to="/app/analises/nova">
+                <Button variant="ghost" icon="add" title="Iniciar uma nova análise de currículo">
+                  Nova Análise
+                </Button>
+              </Link>
+
               <Button
                 variant="secondary"
                 icon={copySuccess ? 'check' : 'content_copy'}
