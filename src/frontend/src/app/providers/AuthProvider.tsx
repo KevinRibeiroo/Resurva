@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { onAuthStateChanged, type User } from 'firebase/auth'
+import { setOriginalResumeOwner } from '../../features/analysis/services/originalResumeSession'
 import {
   firebaseAuth,
   loginErrorMessage,
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     let version = 0
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (currentUser) => {
+      setOriginalResumeOwner(currentUser?.uid ?? null)
       const currentVersion = ++version
       setUser(currentUser)
       setAuthorized(false)
@@ -67,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     return () => {
+      setOriginalResumeOwner(null)
       version++
       unsubscribe()
     }
@@ -85,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
+    setOriginalResumeOwner(null)
     setBusy(true)
     setAuthError('')
     try {

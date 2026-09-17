@@ -2,6 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /source
 
 COPY src/backend/ResumeMatcher.Domain/ResumeMatcher.Domain.csproj src/backend/ResumeMatcher.Domain/
+COPY src/backend/ResumeMatcher.DocumentLayout/ResumeMatcher.DocumentLayout.csproj src/backend/ResumeMatcher.DocumentLayout/
 COPY src/backend/ResumeMatcher.Application/ResumeMatcher.Application.csproj src/backend/ResumeMatcher.Application/
 COPY src/backend/ResumeMatcher.Infrastructure/ResumeMatcher.Infrastructure.csproj src/backend/ResumeMatcher.Infrastructure/
 COPY src/backend/ResumeMatcher.Api/ResumeMatcher.Api.csproj src/backend/ResumeMatcher.Api/

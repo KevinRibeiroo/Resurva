@@ -22,6 +22,7 @@ Aplicação web para comparar um currículo com uma descrição de vaga e aprese
 - Workflow CI de build/testes do backend e typecheck/build do frontend (proteção das branches depende de ativação no GitHub).
 - Adaptação responsável de currículo para a vaga analisada: sugestões com níveis de segurança (`Safe`, `NeedsConfirmation`, `Forbidden`), confirmação explícita e contexto declarado pelo usuário para fatos não declarados previamente, e exportação do currículo adaptado nos formatos PDF e DOCX.
 - Validação de segurança e anti-alucinação no servidor para impedir sugestões que adicionem informações não confirmadas ou inventadas.
+- Protótipo local de exportação DOCX baseado no original, integrado à tela de adaptação em `Development`: [como testar e limitações](docs/LOCAL_LAYOUT_TEST.md). Exige revisão visual no Word; não está publicado.
 
 ## Tecnologias
 

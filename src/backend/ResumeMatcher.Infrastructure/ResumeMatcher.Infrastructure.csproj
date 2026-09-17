@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\ResumeMatcher.DocumentLayout\ResumeMatcher.DocumentLayout.csproj" />
     <ProjectReference Include="..\ResumeMatcher.Application\ResumeMatcher.Application.csproj" />
     <ProjectReference Include="..\ResumeMatcher.Domain\ResumeMatcher.Domain.csproj" />
   </ItemGroup>

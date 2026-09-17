@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IResumeTextExtractor, DocxResumeTextExtractor>();
         services.AddScoped<IResumeDocumentExporter, DocxResumeDocumentExporter>();
         services.AddScoped<IResumeDocumentExporter, PdfResumeDocumentExporter>();
+        services.AddScoped<ILayoutPreservingExportService, LayoutPreservingExportService>();
 
         services.AddOptions<GeminiOptions>()
             .Bind(configuration.GetSection(GeminiOptions.SectionName))

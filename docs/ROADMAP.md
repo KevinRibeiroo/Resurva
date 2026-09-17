@@ -22,6 +22,13 @@ Este documento separa o que já existe do que está planejado. Itens futuros nã
 
 ## Próximos passos
 
+### Exportação baseada no original (local)
+
+- [x] Motor DOCX integrado à tela de adaptação, com seleção de destinos, confirmação canônica e download.
+- [x] Reenvio em memória, ownership/retenção, hash/versão e recusa de layouts incompatíveis.
+- [ ] Validar renderização/paginação e conversão PDF com fontes controladas antes de promover para produção.
+- [ ] Definir armazenamento seguro de originais e disponibilidade fora da sessão.
+
 ### 1. Consolidar a base técnica
 
 - [x] Aplicar integralmente a convenção de arquivos `Entity`, `Model` e interfaces `I...`.
