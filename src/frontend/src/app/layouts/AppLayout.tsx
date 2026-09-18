@@ -19,7 +19,7 @@ export function AppLayout() {
               <span className="material-symbols-outlined" style={{ fontSize: '24px', color: 'var(--color-primary)' }}>
                 auto_awesome
               </span>
-              <span className={styles.brandText}>ResumeMatcher</span>
+              <span className={styles.brandText}>Resurva</span>
             </Link>
 
             <div className={styles.divider} />

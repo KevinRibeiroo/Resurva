@@ -20,7 +20,7 @@ export function LandingPage() {
             <span className="material-symbols-outlined" style={{ fontSize: '26px', color: 'var(--color-primary)' }}>
               auto_awesome
             </span>
-            <span className={styles.logoTitle}>ResumeMatcher</span>
+            <span className={styles.logoTitle}>Resurva</span>
           </Link>
 
           <nav className={styles.navLinks} aria-label="Navegação principal">
@@ -294,7 +294,7 @@ export function LandingPage() {
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
           <div className={styles.footerBrand}>
-            <strong>ResumeMatcher</strong>
+            <strong>Resurva</strong>
             <span>•</span>
             <span>Ambiente restrito de testes (MVP)</span>
           </div>

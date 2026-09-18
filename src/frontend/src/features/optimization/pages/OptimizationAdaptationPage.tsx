@@ -290,7 +290,7 @@ export function OptimizationAdaptationPage() {
           info
         </span>
         <p className="font-body-sm" style={{ color: 'var(--color-text-muted)' }}>
-          <strong style={{ color: 'var(--color-text-high)' }}>Compromisso com a verdade:</strong> O ResumeMatcher não adiciona experiências, títulos ou competências que você não tenha declarado ou previamente confirmado. O foco é refinamento gramatical e alinhamento com a linguagem valorizada na oportunidade.
+          <strong style={{ color: 'var(--color-text-high)' }}>Compromisso com a verdade:</strong> O Resurva não adiciona experiências, títulos ou competências que você não tenha declarado ou previamente confirmado. O foco é refinamento gramatical e alinhamento com a linguagem valorizada na oportunidade.
         </p>
       </Card>
 

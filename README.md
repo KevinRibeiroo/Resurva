@@ -1,6 +1,8 @@
-# ResumeMatcher
+# Resurva
 
 Aplicação web para comparar um currículo com uma descrição de vaga e apresentar uma análise estruturada de aderência. O objetivo é ajudar candidatos a identificar competências encontradas, lacunas e pontos de atenção sem inventar experiências ou qualificações.
+
+O produto se chama **Resurva**. Os nomes técnicos legados `ResumeMatcher` na solução .NET, namespaces e configurações continuam válidos; os identificadores do repositório, banco e serviços publicados foram mantidos para compatibilidade com o ambiente existente.
 
 > **Estado atual:** MVP funcional. O `Mock` continua sendo o provider padrão para desenvolvimento local, e o Gemini pode ser habilitado por configuração. A pontuação final permanece determinística no backend.
 
@@ -198,7 +200,7 @@ pnpm build
 
 ## Uso responsável
 
-O ResumeMatcher deve destacar informações que já existem no currículo. Qualquer funcionalidade futura de otimização precisa distinguir sugestões de redação de alterações factuais e exigir confirmação explícita antes de incluir competências, experiências ou formações não comprovadas.
+O Resurva deve destacar informações que já existem no currículo. Qualquer funcionalidade futura de otimização precisa distinguir sugestões de redação de alterações factuais e exigir confirmação explícita antes de incluir competências, experiências ou formações não comprovadas.
 
 ## Licença
 
