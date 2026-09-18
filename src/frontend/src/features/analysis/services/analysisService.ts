@@ -1,7 +1,9 @@
 import { authenticatedFetch, handleApiResponse } from '../../../shared/api/httpClient'
 import type { AnalysisResultModel } from '../models/AnalysisResultModel'
+import { originalResumeOwner, rememberOriginalResume, forgetOriginalResume } from './originalResumeSession'
 
 export async function uploadResume(file: File): Promise<string> {
+  const owner = originalResumeOwner()
   const formData = new FormData()
   formData.append('file', file)
 
@@ -11,6 +13,7 @@ export async function uploadResume(file: File): Promise<string> {
   })
 
   const result = await handleApiResponse<{ id: string }>(response)
+  if (import.meta.env.DEV) rememberOriginalResume(owner, result.id, file)
   return result.id
 }
 
@@ -37,5 +40,6 @@ export async function deleteResume(id: string): Promise<void> {
     method: 'DELETE',
   })
 
-  return handleApiResponse<void>(response)
+  await handleApiResponse<void>(response)
+  forgetOriginalResume(id)
 }

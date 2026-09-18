@@ -23,6 +23,7 @@ O ResumeMatcher compara currículos em PDF/DOCX com descrições de vagas. Ele a
 - Workflow CI versionado para PRs/push em develop/main; ativação e checks obrigatórios no GitHub dependem de configuração externa. O gatilho de deploy não espera o CI pós-push.
 - Exclusão completa de conta Firebase pendente. Existe operação interna de apagar dados do usuário, sem endpoint de encerramento de conta.
 - Consulte `docs/ROADMAP.md` antes de afirmar que algo futuro já está disponível.
+- Preservação de layout DOCX: motor em `ResumeMatcher.DocumentLayout`, integrado à tela local e endpoints exclusivos de `Development`. Original em memória por sessão/reseleção, sem storage/migration. Leia `docs/LOCAL_LAYOUT_TEST.md` para testar. Exportações padrão/publicadas continuam usando template; estrutura preservada não garante paginação/fidelidade visual (`visual_review_pending`). PDF permanece prova isolada em `tools/layout_probe`. CLI DOCX mantida em `tools/docx_layout_probe`. LibreOffice ainda não instalado/validado. Aprovação da implementação não autoriza inventar/aplicar conteúdo pessoal sem aprovação específica.
 
 ## Arquitetura
 

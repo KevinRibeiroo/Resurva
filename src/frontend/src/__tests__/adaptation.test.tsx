@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { OptimizationAdaptationPage } from '../features/optimization/pages/OptimizationAdaptationPage'
 import * as optimizationService from '../features/optimization/services/optimizationService'
 import { ApiError } from '../shared/api/httpClient'
@@ -45,6 +45,7 @@ const mockPlanDraft = {
 }
 
 describe('OptimizationAdaptationPage', () => {
+  afterEach(() => vi.unstubAllEnvs())
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -78,6 +79,7 @@ describe('OptimizationAdaptationPage', () => {
   })
 
   it('calls applyOptimization and displays server-returned adapted text with export buttons', async () => {
+    vi.stubEnv('DEV', true)
     vi.mocked(optimizationService.getOptimizationPlan).mockResolvedValue(mockPlanDraft as any)
     vi.mocked(optimizationService.applyOptimization).mockResolvedValue({
       id: 'plan-adapt-123',
@@ -138,8 +140,9 @@ describe('OptimizationAdaptationPage', () => {
     })
 
     // Export buttons appear
-    expect(screen.getByRole('button', { name: /Baixar Currículo Adaptado \(PDF\)/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Baixar em DOCX/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /PDF — modelo padrão/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /DOCX — modelo padrão/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /DOCX com layout original/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Copiar Texto Completo/i })).toBeInTheDocument()
   })
 
@@ -207,10 +210,10 @@ describe('OptimizationAdaptationPage', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Baixar Currículo Adaptado \(PDF\)/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /PDF — modelo padrão/i })).toBeInTheDocument()
     })
 
-    const pdfBtn = screen.getByRole('button', { name: /Baixar Currículo Adaptado \(PDF\)/i })
+    const pdfBtn = screen.getByRole('button', { name: /PDF — modelo padrão/i })
     fireEvent.click(pdfBtn)
 
     await waitFor(() => {
@@ -218,7 +221,9 @@ describe('OptimizationAdaptationPage', () => {
     })
   })
 
-  it('triggers DOCX export download via exportAdaptedResume', async () => {
+  it('opens original layout export from the local DOCX action without downloading the template', async () => {
+    vi.stubEnv('DEV', true)
+    Element.prototype.scrollIntoView = vi.fn()
     const appliedPlan = {
       ...mockPlanDraft,
       status: 'Applied',
@@ -240,14 +245,15 @@ describe('OptimizationAdaptationPage', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Baixar em DOCX/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /DOCX — modelo padrão/i })).toBeInTheDocument()
     })
 
-    const docxBtn = screen.getByRole('button', { name: /Baixar em DOCX/i })
+    const docxBtn = screen.getByRole('button', { name: /^DOCX — layout original$/i })
     fireEvent.click(docxBtn)
 
     await waitFor(() => {
-      expect(optimizationService.exportAdaptedResume).toHaveBeenCalledWith('plan-adapt-123', 'docx')
+      expect(screen.getByRole('region', { name: 'Exportar DOCX com layout original' })).toHaveFocus()
+      expect(optimizationService.exportAdaptedResume).not.toHaveBeenCalled()
     })
   })
 })
