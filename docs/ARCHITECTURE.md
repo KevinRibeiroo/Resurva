@@ -57,6 +57,8 @@ Implementa os contratos da camada Application:
 
 ### ResumeMatcher.Api
 
+A integração local de layout usa `ILayoutPreservingExportService` (Application), implementado em Infrastructure. A biblioteca auxiliar `ResumeMatcher.DocumentLayout` contém inspeção/edição/verificação Open XML, sem dependência da API, banco ou domínio. CLI e Infrastructure a referenciam; o backend não referencia executáveis de pesquisa. Endpoints exclusivos de `Development` usam plano canônico e original multipart em memória, sem persistir documentos nem alterar a comparação. [Contrato e limites](LOCAL_LAYOUT_TEST.md).
+
 É o ponto de entrada HTTP. Responsabilidades:
 
 - registrar dependências e configurações;
@@ -169,6 +171,8 @@ Não introduza dependências de infraestrutura na camada Domain ou acesso direto
 - Recomendações nunca devem inventar competências, experiências, cargos ou formação.
 
 ## Decisões atuais
+
+A preservação do layout original está em [prova técnica local](RESUME_LAYOUT_PRESERVATION.md), isolada em `tools/layout_probe`. Não modifica os contratos nem a exportação atual da API; armazenamento do original e reflow continuam pendentes.
 
 - **Provider Mock por padrão:** permite validar extração, persistência, UI e pontuação sem custo externo.
 - **Gemini opcional:** integração real atrás do mesmo contrato, ativada somente por configuração.

@@ -18,7 +18,7 @@ using ResumeMatcher.Infrastructure;
 
 namespace ResumeMatcher.Tests;
 
-public sealed class ResumeMatcherApiFactory : WebApplicationFactory<Program>
+public sealed class ResumeMatcherApiFactory(string environment = "Testing") : WebApplicationFactory<Program>
 {
     public const string FirebaseProjectId = "resume-tests";
     public const string AllowedEmail = "owner@example.test";
@@ -61,7 +61,7 @@ public sealed class ResumeMatcherApiFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseEnvironment("Testing");
+        builder.UseEnvironment(environment);
         builder.ConfigureLogging(logging => logging.ClearProviders().AddConsole());
         builder.ConfigureServices(services =>
         {
