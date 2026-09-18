@@ -36,7 +36,7 @@ describe('LandingPage', () => {
     )
 
     // Brand and headline
-    expect(screen.getAllByText('ResumeMatcher').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Resurva').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/Descubra o quanto seu currículo/i)).toBeInTheDocument()
 
     // 3-step 'Como funciona'

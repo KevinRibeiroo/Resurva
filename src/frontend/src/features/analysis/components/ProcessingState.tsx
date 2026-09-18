@@ -170,7 +170,7 @@ export function ProcessingState({
               verified_user
             </span>
             <span className="font-body-sm" style={{ color: 'var(--color-text-muted)' }}>
-              O ResumeMatcher analisa estritamente fatos presentes no seu documento. Nenhuma experiência fictícia é gerada.
+              O Resurva analisa estritamente fatos presentes no seu documento. Nenhuma experiência fictícia é gerada.
             </span>
           </div>
         )}

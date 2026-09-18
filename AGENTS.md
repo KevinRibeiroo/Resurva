@@ -4,7 +4,9 @@ Leia este arquivo antes de modificar o repositório. Ele registra o contexto est
 
 ## Objetivo
 
-O ResumeMatcher compara currículos em PDF/DOCX com descrições de vagas. Ele apresenta scores e evidências para ajudar o candidato a entender aderência e lacunas. Não é um sistema de seleção de candidatos e não deve inventar informações para elevar o score.
+O Resurva compara currículos em PDF/DOCX com descrições de vagas. Ele apresenta scores e evidências para ajudar o candidato a entender aderência e lacunas. Não é um sistema de seleção de candidatos e não deve inventar informações para elevar o score.
+
+A marca apresentada ao usuário é **Resurva**. `ResumeMatcher` permanece como identificador técnico legado nos projetos .NET, namespaces, configuração e infraestrutura; não renomear esses identificadores por substituição global ao ajustar textos da marca.
 
 ## Estado real
 
