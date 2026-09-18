@@ -11,7 +11,7 @@ export function AuthProtected({ children }: { children?: React.ReactNode }) {
   if (checking) {
     return (
       <div className={styles.loadingContainer}>
-        <Spinner size="lg" label="Verificando acesso seguro ao ResumeMatcher…" />
+        <Spinner size="lg" label="Verificando acesso seguro ao Resurva…" />
       </div>
     )
   }

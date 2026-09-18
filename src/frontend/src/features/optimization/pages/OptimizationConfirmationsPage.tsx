@@ -297,7 +297,7 @@ export function OptimizationConfirmationsPage() {
             Compromisso Ético de Precisão
           </strong>
           <span className="font-body-sm" style={{ color: 'var(--color-text-muted)' }}>
-            O ResumeMatcher nunca inventa experiências ou competências. Informações não explícitas nunca são incluídas sem sua expressa validação.
+            O Resurva nunca inventa experiências ou competências. Informações não explícitas nunca são incluídas sem sua expressa validação.
           </span>
         </div>
       </Card>

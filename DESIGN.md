@@ -1,6 +1,6 @@
 ---
 version: alpha
-name: ResumeMatcher
+name: Resurva
 description: Interface de comparação factual e adaptação de currículos, preservando o visual atual.
 colors:
   background: '#0b0d13'
@@ -22,7 +22,7 @@ spacing:
   section-gap: '2rem'
 ---
 
-# ResumeMatcher — contexto visual existente
+# Resurva — contexto visual existente
 
 ## Overview
 
