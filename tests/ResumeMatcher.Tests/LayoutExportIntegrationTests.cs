@@ -14,6 +14,74 @@ namespace ResumeMatcher.Tests;
 public sealed class LayoutExportIntegrationTests
 {
     [Theory]
+    [InlineData("Software Engineer | .NET | React")]
+    [InlineData("Engenheiro de Software | .NET | React")]
+    public async Task Approved_Professional_Title_Is_Exported_With_Original_Formatting(string title)
+    {
+        var source = DocumentWithTitle(title);
+        await using var factory = new ResumeMatcherApiFactory("Development");
+        var (id, suggestionId, _) = await Seed(factory, original: title,
+            proposed: "Engenheiro de Software | APIs REST", document: source);
+        using var client = factory.CreateAuthenticatedClient();
+        using var inspect = await client.PostAsync($"/api/optimizations/{id}/layout/inspect", Form(source));
+        Assert.Equal(HttpStatusCode.OK, inspect.StatusCode);
+        var snapshot = await inspect.Content.ReadFromJsonAsync<JsonElement>();
+        var change = snapshot.GetProperty("changes")[0];
+        Assert.Equal(JsonValueKind.Null, change.GetProperty("blockedReason").ValueKind);
+        Assert.Equal("p:2", Assert.Single(change.GetProperty("candidates").EnumerateArray()).GetProperty("id").GetString());
+        using var export = await client.PostAsync($"/api/optimizations/{id}/layout/export",
+            ExportForm(source, snapshot.GetProperty("sourceSha256").GetString()!, 2, suggestionId, "p:2"));
+        Assert.Equal(HttpStatusCode.OK, export.StatusCode);
+        using var before = WordprocessingDocument.Open(new MemoryStream(source), false);
+        using var after = WordprocessingDocument.Open(new MemoryStream(await export.Content.ReadAsByteArrayAsync()), false);
+        var originalParagraphs = before.MainDocumentPart!.Document!.Body!.Elements<Paragraph>().ToArray();
+        var resultParagraphs = after.MainDocumentPart!.Document!.Body!.Elements<Paragraph>().ToArray();
+        Assert.Equal("Engenheiro de Software | APIs REST", resultParagraphs[2].InnerText);
+        Assert.Equal(originalParagraphs[2].ParagraphProperties!.OuterXml, resultParagraphs[2].ParagraphProperties!.OuterXml);
+        Assert.Equal(originalParagraphs[2].GetFirstChild<Run>()!.RunProperties!.OuterXml,
+            resultParagraphs[2].GetFirstChild<Run>()!.RunProperties!.OuterXml);
+        Assert.Equal(originalParagraphs.Where((_, i) => i != 2).Select(p => p.OuterXml),
+            resultParagraphs.Where((_, i) => i != 2).Select(p => p.OuterXml));
+        Assert.Equal(before.MainDocumentPart.Document.Body.GetFirstChild<SectionProperties>()!.OuterXml,
+            after.MainDocumentPart.Document.Body.GetFirstChild<SectionProperties>()!.OuterXml);
+    }
+
+    [Theory]
+    [InlineData("Pessoa Fictícia", "p:0")]
+    [InlineData("pessoa@example.invalid", "p:1")]
+    [InlineData("Software Engineer | 2022–2024", "p:2")]
+    [InlineData("Software Engineer | contato@example.invalid", "p:2")]
+    [InlineData("Rua Exemplo, 100", "p:2")]
+    public async Task Protected_Preamble_Cannot_Be_Changed_As_A_Title(string original, string block)
+    {
+        var source = DocumentWithTitle(original);
+        await using var factory = new ResumeMatcherApiFactory("Development");
+        var (id, suggestionId, _) = await Seed(factory, original: original, proposed: "Outro título", document: source);
+        using var client = factory.CreateAuthenticatedClient();
+        using var inspect = await client.PostAsync($"/api/optimizations/{id}/layout/inspect", Form(source));
+        var snapshot = await inspect.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Empty(snapshot.GetProperty("changes")[0].GetProperty("candidates").EnumerateArray());
+        using var export = await client.PostAsync($"/api/optimizations/{id}/layout/export",
+            ExportForm(source, snapshot.GetProperty("sourceSha256").GetString()!, 2, suggestionId, block));
+        Assert.Equal(HttpStatusCode.BadRequest, export.StatusCode);
+    }
+
+    private static byte[] DocumentWithTitle(string title)
+    {
+        using var stream = new MemoryStream();
+        stream.Write(Document());
+        stream.Position = 0;
+        using (var doc = WordprocessingDocument.Open(stream, true))
+        {
+            var body = doc.MainDocumentPart!.Document!.Body!;
+            body.InsertBefore(new Paragraph(new ParagraphProperties(new Justification { Val = JustificationValues.Center }),
+                new Run(new RunProperties(new Bold(), new FontSize { Val = "18" }), new Text(title))),
+                body.Elements<Paragraph>().ElementAt(2));
+        }
+        return stream.ToArray();
+    }
+
+    [Theory]
     [InlineData("p:3")]
     [InlineData("p:5")]
     public async Task Replacement_And_Multiple_Additions_Are_All_Preserved(string destination)
@@ -228,9 +296,9 @@ public sealed class LayoutExportIntegrationTests
 
     internal static async Task<(Guid Id, Guid SuggestionId, byte[] Source)> Seed(ResumeMatcherApiFactory factory,
         string original = "API em C#", string proposed = "APIs em C#", OptimizationSafetyLevel level = OptimizationSafetyLevel.Safe,
-        bool confirmed = false)
+        bool confirmed = false, byte[]? document = null)
     {
-        var source = Document();
+        var source = document ?? Document();
         var text = (await new DocxResumeTextExtractor().ExtractAsync(new MemoryStream(source), default)).Trim();
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ResumeMatcherDbContext>();

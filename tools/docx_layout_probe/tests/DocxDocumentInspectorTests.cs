@@ -5,6 +5,27 @@ namespace DocxLayoutProbe.Tests;
 public class DocxDocumentInspectorTests
 {
     [Fact]
+    public void ProfessionalTitleDetectionIsOptInAndPreservesProtectedBlocks()
+    {
+        var source = DocxTestDocument.Create();
+        var profile = new DocxInspectionProfileModel { HeadingStyleIds = ["SectionHeader"] };
+        Assert.False(DocxDocumentInspector.Inspect(source, profile).Blocks[1].Editable);
+        var blocks = DocxDocumentInspector.Inspect(source, profile with { DetectProfessionalTitle = true }).Blocks;
+        Assert.Equal("professional_title", blocks[1].Kind);
+        Assert.True(blocks[1].Editable);
+        foreach (var index in new[] { 0, 2, 3, 8 }) Assert.False(blocks[index].Editable);
+    }
+
+    [Fact]
+    public void ProfessionalTitleDetectionDoesNotReleaseComplexFormatting()
+    {
+        var source = DocxTestDocument.Create((body, _) => body.Elements<Paragraph>().ElementAt(1)
+            .Append(new Hyperlink(new Run(new Text("website")))));
+        var profile = new DocxInspectionProfileModel { HeadingStyleIds = ["SectionHeader"], DetectProfessionalTitle = true };
+        Assert.False(DocxDocumentInspector.Inspect(source, profile).Blocks[1].Editable);
+    }
+
+    [Fact]
     public void ExplicitCustomHeadingMapsSectionsAndPreservesInput()
     {
         var source = DocxTestDocument.Create();

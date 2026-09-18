@@ -40,7 +40,7 @@ Preservar as famílias e classes tipográficas existentes. Textos de currículo 
 
 ## Layout
 
-Reutilizar a largura e o fluxo natural da página de adaptação. O painel de exportação ocupa a largura disponível; controles e ações se reorganizam no celular. Não alterar o dock ou a navegação de outras telas.
+Reutilizar a largura e o fluxo natural da página de adaptação. O painel de exportação ocupa a largura disponível; controles e ações se reorganizam no celular. No ambiente local, a ação principal DOCX do dock leva ao painel de layout original com foco de teclado. Modelo padrão permanece uma alternativa explícita. Preservar a navegação de outras telas.
 
 ## Elevation & Depth
 

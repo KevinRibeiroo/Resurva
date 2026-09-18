@@ -56,6 +56,7 @@ export function OptimizationAdaptationPage() {
   const [exportingDocx, setExportingDocx] = useState<boolean>(false)
   const [copySuccess, setCopySuccess] = useState<boolean>(false)
   const dockRef = useRef<HTMLDivElement>(null)
+  const layoutExportRef = useRef<HTMLElement>(null)
   const [dockHeight, setDockHeight] = useState(0)
 
   // Fetch plan if accessed directly by URL
@@ -545,7 +546,9 @@ export function OptimizationAdaptationPage() {
 
       {/* Floating Bottom Master Action Bar */}
       {import.meta.env.DEV && displayedAdaptedText && plan && (
-        <LayoutExportPanel key={`${plan.id}:${plan.version}`} optimizationId={plan.id} resumeId={plan.resumeId} />
+        <section ref={layoutExportRef} tabIndex={-1} aria-label="Exportar DOCX com layout original">
+          <LayoutExportPanel key={`${plan.id}:${plan.version}`} optimizationId={plan.id} resumeId={plan.resumeId} />
+        </section>
       )}
 
       <div className={styles.masterDock} ref={dockRef}>
@@ -555,7 +558,9 @@ export function OptimizationAdaptationPage() {
           </span>
           <span className="font-body-sm" style={{ color: 'var(--color-text-high)', fontSize: '0.875rem' }}>
             {displayedAdaptedText
-              ? 'Currículo adaptado pronto para cópia ou download direto.'
+              ? import.meta.env.DEV
+                ? 'Use DOCX — layout original para manter a formatação do arquivo enviado.'
+                : 'Currículo adaptado pronto para cópia ou download direto.'
               : 'Revise as decisões acima e aplique para gerar a versão adaptada oficial.'}
           </span>
         </div>
@@ -585,14 +590,30 @@ export function OptimizationAdaptationPage() {
                 onClick={() => handleDownload('docx')}
                 loading={exportingDocx}
                 disabled={exportingPdf}
-                title="Baixar currículo no formato DOCX"
-                id="download-docx-btn"
+                title="Baixar DOCX com o modelo padrão, sem preservar a formatação original"
+                id="download-docx-template-btn"
               >
                 DOCX — modelo padrão
               </Button>
 
+              {import.meta.env.DEV && (
+                <Button
+                  variant="primary"
+                  icon="description"
+                  aria-label="DOCX — layout original"
+                  onClick={() => {
+                    layoutExportRef.current?.focus({ preventScroll: true })
+                    layoutExportRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' })
+                  }}
+                  title="Revisar os destinos das alterações e baixar usando o DOCX original"
+                  id="download-docx-btn"
+                >
+                  DOCX — layout original
+                </Button>
+              )}
+
               <Button
-                variant="primary"
+                variant={import.meta.env.DEV ? 'secondary' : 'primary'}
                 icon="picture_as_pdf"
                 onClick={() => handleDownload('pdf')}
                 loading={exportingPdf}
