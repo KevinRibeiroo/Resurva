@@ -10,7 +10,10 @@ public sealed class LayoutPreservingExportService(IResumeOptimizationService opt
 {
     // Same 10 MiB ceiling as resume upload, also applied to decompressed package bytes.
     private const int MaxDocumentBytes = LayoutExportConstraints.MaxDocumentBytes;
-    private static readonly DocxInspectionProfileModel Profile = new() { HeadingStyleIds = ["SectionHeader"] };
+    private static readonly DocxInspectionProfileModel Profile = new()
+    {
+        HeadingStyleIds = ["SectionHeader"], DetectProfessionalTitle = true
+    };
 
     public async Task<LayoutInspectionModel> InspectAsync(Guid optimizationId, byte[] original, CancellationToken cancellationToken)
     {
@@ -113,7 +116,7 @@ public sealed class LayoutPreservingExportService(IResumeOptimizationService opt
         return new(item.SuggestionId, item.ProposedText, insertion ? "addition" : "replace_text", candidates,
             candidates.Count > 0 ? null : insertion
                 ? "Não há destino compatível. Skills precisam de lista categorizada; frases precisam de resumo ou item de experiência com formatação simples."
-                : "Não foi encontrado um trecho editável exato no resumo ou em um item de experiência. Cabeçalhos, datas e formatações complexas são protegidos.");
+                : "Não foi encontrado um trecho editável exato no título profissional, resumo ou em um item de experiência. Nome, contatos, datas e formatações complexas são protegidos.");
     }
 
     private static DocxEditOperationModel Operation(AppliedOptimizationItemModel item, DocxBlockModel block)

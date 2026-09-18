@@ -55,6 +55,8 @@ public static class DocxDocumentInspector
                 var protectedContent = index == firstContent || IsIdentityOrDate(text);
                 var kind = heading ? "section_heading" : section is null ? "protected" : "other";
                 var simple = IsSimple(paragraph) && !string.IsNullOrWhiteSpace(text);
+                if (profile.DetectProfessionalTitle && !heading && !protectedContent && simple && section is null &&
+                    IsProfessionalTitle(text)) kind = "professional_title";
                 if (!heading && !protectedContent && section is not null)
                 {
                     kind = SectionKind(section);
@@ -121,6 +123,14 @@ public static class DocxDocumentInspector
         text.Contains('@') || Regex.IsMatch(text, @"(?i)(https?://|www\.|linkedin\.com|github\.com)") ||
         Regex.IsMatch(text, @"\+?\d[\d ()-]{7,}\d") ||
         Regex.IsMatch(text, @"\b(?:19|20)\d{2}\s*[-–—/]\s*(?:(?:19|20)\d{2}|[Pp]resente|[Aa]tual)");
+
+    // Opt-in and limited to the preamble. A role label never releases identity,
+    // contact details, dated employment headers, section headings or complex runs.
+    private static bool IsProfessionalTitle(string text) => text.Length <= 240 &&
+        !Regex.IsMatch(text, @"\b(?:19|20)\d{2}\b") &&
+        Regex.IsMatch(text.Trim(),
+            @"\A(?:(?:senior|sênior|junior|júnior|lead|principal|staff)\s+)*(?:software\s+(?:engineer|developer)|(?:backend|frontend|full[ -]?stack)\s+(?:engineer|developer)|engenheir[oa]\s+de\s+software|desenvolvedor(?:a)?)\b",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     private static void CheckPackage(byte[] source)
     {

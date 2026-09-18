@@ -75,9 +75,9 @@ export function LayoutExportPanel({ optimizationId, resumeId }: { optimizationId
 
   return (
     <Card className={styles.panel} padding="lg">
-      <h2 className="font-headline-sm">DOCX com layout original — teste local</h2>
+      <h2 className="font-headline-sm">DOCX com layout original</h2>
       <p>Use o mesmo DOCX enviado na análise. O original fica apenas na memória desta sessão; após recarregar, selecione-o novamente.</p>
-      <p id="layout-file-help">Até 10 MiB. Este protótipo aceita documentos simples de uma coluna. Não converte PDF nem garante a mesma paginação.</p>
+      <p id="layout-file-help">Até 10 MiB. Aceita documentos simples de uma coluna. Mantém a formatação do DOCX; alterações no texto podem mudar as quebras de página. PDF não é compatível.</p>
       <label htmlFor="layout-original-file">DOCX original</label>
       <input id="layout-original-file" className={styles.field} type="file" accept=".docx"
         aria-describedby="layout-file-help" onChange={event => selectFile(event.target.files?.[0] ?? null)} />

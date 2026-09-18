@@ -22,7 +22,7 @@ Abra `http://localhost:5173`. API em `http://localhost:5080`, ambiente `Developm
 
 1. Faça login, envie o **DOCX original** e compare com a vaga.
 2. Entre em **Adaptar currículo**, revise/confirme as informações e clique em **Aplicar alterações aprovadas**.
-3. Na mesma tela, use **DOCX com layout original — teste local**. O último DOCX enviado fica em memória durante a sessão. Se recarregar ou abrir uma análise antiga, selecione novamente o original.
+3. Na barra de ações, clique em **DOCX — layout original**. Essa é a ação principal de exportação DOCX no ambiente local e leva ao painel **DOCX com layout original**, com foco de teclado. O último DOCX enviado fica em memória durante a sessão. Se recarregar ou abrir uma análise antiga, selecione novamente o original.
 4. Clique em **Inspecionar DOCX**. Confira o destino de cada alteração: substituição com destino único já vem selecionada; inclusões sempre exigem escolha explícita.
 5. Skills curtas podem entrar na categoria existente; frases completas podem ser acrescentadas ao fim de um resumo/item de experiência compatível. O texto é exatamente o aprovado (ou a declaração confirmada) no plano, sem uma nova chamada à IA.
 6. Clique em **Baixar DOCX com layout original**. Abra no Word e revise linhas/páginas antes de enviar. Os botões **PDF — modelo padrão** e **DOCX — modelo padrão** continuam separados: não preservam layout.
@@ -43,7 +43,7 @@ Se uma mudança não tiver destino compatível, a tela mostra o motivo e não ge
 - O navegador guarda no máximo o último original em memória, vinculado à sessão. Logout/troca de usuário invalidam inclusive uploads pendentes. Não usa localStorage, sessionStorage ou URLs para o conteúdo.
 - Arquivo e pacote descompactado: até 10 MiB. Há 64 KiB adicionais apenas para envelope multipart, não para ampliar o tamanho do arquivo. Pacotes ativos/protegidos e estruturas incompatíveis são recusados.
 - O texto extraído deve coincidir com `OriginalText`, normalizando apenas espaços. SHA-256 vincula inspeção/exportação. Como o upload anterior não guarda o binário/hash, isso não comprova identidade byte a byte com o primeiro upload: uma variante de layout com texto idêntico pode ser reselecionada.
-- Suporte: uma coluna, parágrafos/runs simples, títulos por outline/Heading1/SectionHeader, resumo, itens de experiência e skills categorizadas. Datas, identidade e cabeçalhos de emprego ficam protegidos; título profissional não é liberado automaticamente pelo adaptador HTTP.
+- Suporte: uma coluna, parágrafos/runs simples, títulos por outline/Heading1/SectionHeader, resumo, itens de experiência e skills categorizadas. Datas, identidade e cabeçalhos de emprego ficam protegidos. O adaptador HTTP reconhece títulos profissionais simples de desenvolvimento/engenharia de software (português/inglês), antes da primeira seção e após o nome. A substituição ainda exige trecho exato, aprovação no plano e formatação compatível; parágrafos com contatos ou anos permanecem protegidos.
 - Substituições sobrepostas, tabelas, múltiplas colunas e formatação ambígua são recusadas. Inclusões no mesmo bloco são sequenciais. Falta de evidência não bloqueia sozinha uma inclusão confirmada, mas os limites estruturais continuam valendo.
 - Preservação estrutural não garante paginação: sem reflow, renderização/PDF fiel, redução de fonte ou truncamento automático. A revisão visual no Word permanece obrigatória.
 
