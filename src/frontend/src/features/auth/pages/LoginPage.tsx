@@ -40,7 +40,7 @@ export function LoginPage() {
             </span>
           </div>
           <h1 className="font-headline-lg" style={{ color: 'var(--color-text-high)', marginBottom: '0.25rem' }}>
-            ResumeMatcher
+            Resurva
           </h1>
           <p className="font-body-md" style={{ color: 'var(--color-text-muted)' }}>
             Ambiente de análise comparativa e diagnóstico factual de currículos.
