@@ -50,7 +50,7 @@ Para que o job `deploy-frontend` publique no Firebase Hosting, é necessário ca
    cd src/frontend
    npx -y firebase-tools init hosting:github
    ```
-   - Responda `KevinRibeiroo/ResumeMatcher` para o repositório.
+   - Responda `KevinRibeiroo/Resurva` para o repositório.
    - Responda `N` para rodar script de build antes de cada deploy (já gerenciado pelo workflow).
    - Responda `Y` para deploy automático no canal live ao mergear.
    - Indique a branch `develop`. O CLI cria a Service Account na GCP e salva o secret automaticamente no GitHub.
