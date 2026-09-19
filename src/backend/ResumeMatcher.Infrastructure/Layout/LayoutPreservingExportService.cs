@@ -28,10 +28,11 @@ public sealed class LayoutPreservingExportService(IResumeOptimizationService opt
         var (plan, inspection) = await LoadAsync(optimizationId, original, cancellationToken);
         if (version != plan.Version || !string.Equals(sourceSha256, inspection.SourceSha256, StringComparison.Ordinal))
             throw new OptimizationConflictException("O arquivo ou a versão mudou. Inspecione o DOCX novamente.");
-        if (placements.Count != plan.AppliedChanges!.Count || placements.Select(p => p.SuggestionId).Distinct().Count() != placements.Count)
-            throw new InvalidResumeException("Escolha um destino válido para cada alteração aprovada, sem duplicatas.");
+        if (placements.Count == 0 || placements.Select(p => p.SuggestionId).Distinct().Count() != placements.Count ||
+            placements.Any(p => !plan.AppliedChanges!.Any(item => item.SuggestionId == p.SuggestionId)))
+            throw new InvalidResumeException("Escolha pelo menos uma alteração aprovada com destino válido, sem duplicatas.");
         var operations = new List<DocxEditOperationModel>();
-        foreach (var item in plan.AppliedChanges)
+        foreach (var item in plan.AppliedChanges!.Where(item => placements.Any(p => p.SuggestionId == item.SuggestionId)))
         {
             cancellationToken.ThrowIfCancellationRequested();
             var mapping = Map(item, plan, inspection, original, cancellationToken);
@@ -43,7 +44,7 @@ public sealed class LayoutPreservingExportService(IResumeOptimizationService opt
         try
         {
             var output = original;
-            var additionIds = plan.AppliedChanges.Where(i => string.IsNullOrWhiteSpace(i.OriginalText))
+            var additionIds = plan.AppliedChanges!.Where(i => string.IsNullOrWhiteSpace(i.OriginalText))
                 .Select(i => i.SuggestionId.ToString("N")).ToHashSet();
             var replacements = operations.Where(o => !additionIds.Contains(o.Id)).ToArray();
             if (replacements.Length > 0)
@@ -53,7 +54,7 @@ public sealed class LayoutPreservingExportService(IResumeOptimizationService opt
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var current = DocxDocumentInspector.Inspect(output, Profile);
-                var item = plan.AppliedChanges.Single(i => i.SuggestionId.ToString("N") == insertion.Id);
+                var item = plan.AppliedChanges!.Single(i => i.SuggestionId.ToString("N") == insertion.Id);
                 output = Apply(output, current.SourceSha256,
                     [Operation(item, current.Blocks.Single(b => b.Id == insertion.BlockId))]);
             }

@@ -11,7 +11,7 @@
   top: 0;
   z-index: 40;
   width: 100%;
-  background: rgba(17, 19, 25, 0.85);
+  background: var(--color-masthead);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--color-border-hairline);
@@ -47,11 +47,11 @@
 }
 
 .brandText {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 1.125rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 2rem;
   letter-spacing: -0.02em;
-  color: var(--color-text-high);
+  color: #ffffff;
 }
 
 .divider {
@@ -81,19 +81,19 @@
   border-radius: var(--radius-md);
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: #dbe5d7;
   transition: all 0.2s ease;
 }
 
 .navItem:hover {
-  color: var(--color-text-high);
-  background: var(--color-surface-card);
+  color: #ffffff;
+  background: #ffffff18;
 }
 
 .navItemActive {
-  color: var(--color-primary);
-  background: rgba(99, 102, 241, 0.12);
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #ffffff;
+  background: #ffffff12;
+  border: 1px solid #ffffff30;
 }
 
 .userArea {
@@ -108,7 +108,7 @@
   gap: var(--space-xs);
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-lg);
-  background: var(--color-surface-low);
+  background: transparent;
   border: 1px solid var(--color-border-hairline);
   max-width: 220px;
 }
@@ -131,7 +131,7 @@
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 500;
   flex-shrink: 0;
 }
 
@@ -150,7 +150,7 @@
 .userName {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-text-high);
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -159,7 +159,7 @@
 
 .userEmail {
   font-size: 0.6875rem;
-  color: var(--color-text-muted);
+  color: #dbe5d7;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -172,3 +172,8 @@
   flex-direction: column;
   width: 100%;
 }
+
+.topBar button { color:white; }
+.topBar :focus-visible { outline-color:var(--color-evidence); }
+.navItem { min-height:44px; }
+@media(max-width:600px) { .barInner { align-items:flex-start; gap:8px; } .brandArea { flex-wrap:wrap; gap:4px; } .logoLink { flex-basis:100%; } .navItem { padding-left:0; } .userArea { padding-top:4px; gap:4px; } .profileBadge { display:none; } }

@@ -14,7 +14,9 @@ export async function exportOriginalLayout(id: string, file: File, inspection: L
   form.append('file', file)
   form.append('version', String(inspection.version))
   form.append('sourceSha256', inspection.sourceSha256)
-  form.append('placements', JSON.stringify(inspection.changes.map(change => ({
+  form.append('placements', JSON.stringify(inspection.changes.filter(change =>
+    !change.blockedReason && change.candidates.some(block => block.id === targets[change.suggestionId])
+  ).map(change => ({
     suggestionId: change.suggestionId, blockId: targets[change.suggestionId],
   }))))
   const response = await authenticatedFetch(`/api/optimizations/${id}/layout/export`, { method: 'POST', body: form, signal })

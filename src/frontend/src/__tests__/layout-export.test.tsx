@@ -72,13 +72,40 @@ describe('exportação com layout original', () => {
     expect(screen.queryByText('PostgreSQL')).not.toBeInTheDocument()
   })
 
-  it('exibe bloqueio do motor sem oferecer um download parcial', async () => {
+  it('desabilita download quando nenhuma alteração tem destino válido', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ ...inspection,
       changes: [{ ...inspection.changes[0], candidates: [], blockedReason: 'Formatação não suportada.' }] }))))
     render(<LayoutExportPanel optimizationId="plan-1" resumeId="resume-1" />)
     fireEvent.change(screen.getByLabelText('DOCX original'), { target: { files: [new File(['a'], 'original.docx')] } })
     fireEvent.click(screen.getByRole('button', { name: 'Inspecionar DOCX' }))
     await screen.findByText('Formatação não suportada.')
+    expect(screen.getByText('Não incluídas neste download')).toBeInTheDocument()
+    expect(screen.queryByText(/Resolva os destinos pendentes/)).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Baixar DOCX com layout original' })).toBeDisabled()
+  })
+
+  it('exporta alterações com destino mesmo quando outra está bloqueada ou não foi selecionada', async () => {
+    const partial = { ...inspection, changes: [inspection.changes[0],
+      { ...inspection.changes[0], suggestionId: 'blocked', proposedText: 'Título sintético', candidates: [], blockedReason: 'Sem destino compatível.' },
+      { ...inspection.changes[0], suggestionId: 'unselected', proposedText: 'SQLite' },
+    ] }
+    const fetchMock = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify(partial)))
+      .mockResolvedValueOnce(new Response(new Blob(['synthetic-docx'])))
+    vi.stubGlobal('fetch', fetchMock)
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:synthetic'), revokeObjectURL: vi.fn() }))
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    render(<LayoutExportPanel optimizationId="plan-1" resumeId="resume-1" />)
+    fireEvent.change(screen.getByLabelText('DOCX original'), { target: { files: [new File(['synthetic'], 'original.docx')] } })
+    fireEvent.click(screen.getByRole('button', { name: 'Inspecionar DOCX' }))
+    await screen.findByLabelText('Destino de PostgreSQL')
+    fireEvent.change(screen.getByLabelText('Destino de PostgreSQL'), { target: { value: 'p:6' } })
+    const download = screen.getByRole('button', { name: 'Baixar DOCX com layout original' })
+    expect(download).toBeEnabled()
+    expect(screen.getByText('Não incluídas neste download')).toBeVisible()
+    fireEvent.click(download)
+    await screen.findByText(/Download iniciado: 1 alteração\(ões\) incluída\(s\), 2 não incluída\(s\)/)
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body.get('placements'))).toEqual([
+      { suggestionId: 'suggestion-1', blockId: 'p:6' },
+    ])
   })
 })

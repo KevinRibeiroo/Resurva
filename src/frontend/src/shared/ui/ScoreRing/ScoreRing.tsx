@@ -67,9 +67,9 @@ export function ScoreRing({
         {useGradient && (
           <defs>
             <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#4cd7f6" />
-              <stop offset="50%" stopColor="#8083ff" />
-              <stop offset="100%" stopColor="#10b981" />
+              <stop offset="0%" stopColor="var(--color-primary)" />
+              <stop offset="50%" stopColor="var(--color-primary)" />
+              <stop offset="100%" stopColor="var(--color-primary)" />
             </linearGradient>
           </defs>
         )}

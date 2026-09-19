@@ -60,7 +60,7 @@ export function LayoutExportPanel({ optimizationId, resumeId }: { optimizationId
         link.remove()
         // Allow the browser to consume the download before releasing its object URL.
         window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-        setNotice('Download iniciado. Abra o DOCX no Word e confira quebras de linha e páginas antes de enviar.')
+        setNotice(`Download iniciado: ${selectedChanges.length} alteração(ões) incluída(s), ${omittedChanges.length} não incluída(s). Abra o DOCX no Word e confira quebras de linha e páginas antes de enviar.`)
       }
     } catch (err) {
       if (pending.current === controller && !controller.signal.aborted)
@@ -70,8 +70,11 @@ export function LayoutExportPanel({ optimizationId, resumeId }: { optimizationId
     }
   }
 
-  const ready = inspection && inspection.changes.length > 0 && inspection.changes.every(change =>
+  const selectedChanges = inspection?.changes.filter(change =>
     !change.blockedReason && change.candidates.some(block => block.id === targets[change.suggestionId]))
+    ?? []
+  const omittedChanges = inspection?.changes.filter(change => !selectedChanges.includes(change)) ?? []
+  const ready = selectedChanges.length > 0
 
   return (
     <Card className={styles.panel} padding="lg">
@@ -88,7 +91,7 @@ export function LayoutExportPanel({ optimizationId, resumeId }: { optimizationId
       </div>
       {error && <Alert>{error}</Alert>}
       {inspection && <>
-        <p>Confira o destino de cada alteração aprovada. Inclusões são acrescentadas ao fim do trecho escolhido; skills entram na categoria selecionada. Nenhuma alteração será omitida silenciosamente.</p>
+        <p>Confira o destino de cada alteração aprovada. Cada alteração é independente: somente as que têm destino selecionado serão incluídas neste download. As demais ficam como estão no documento original. Inclusões são acrescentadas ao fim do trecho escolhido; skills entram na categoria selecionada.</p>
         {inspection.changes.map(change => (
           <div className={styles.change} key={change.suggestionId}>
             <strong>{change.proposedText}</strong>
@@ -97,15 +100,24 @@ export function LayoutExportPanel({ optimizationId, resumeId }: { optimizationId
               <select id={`layout-target-${change.suggestionId}`} className={styles.field} disabled={Boolean(busy)}
                 value={targets[change.suggestionId] ?? ''}
                 onChange={event => { setTargets(previous => ({ ...previous, [change.suggestionId]: event.target.value })); setNotice('') }}>
-                <option value="">Selecione o trecho ou categoria</option>
+                <option value="">Não incluir neste download</option>
                 {change.candidates.map(block => <option key={block.id} value={block.id}>{block.section} — {block.text}</option>)}
               </select>
               {targets[change.suggestionId] && <p>{change.candidates.find(block => block.id === targets[change.suggestionId])?.text}</p>}
             </>}
           </div>
         ))}
-        {!ready && <p>Resolva os destinos pendentes para baixar. Se houver bloqueios, revise a adaptação ou use a exportação em modelo padrão.</p>}
-        <Button variant="primary" onClick={() => run('export')} disabled={!ready || Boolean(busy)} loading={busy === 'export'}>
+        <div id="layout-download-reason">
+          <p>{selectedChanges.length} alteração(ões) será(ão) incluída(s) neste download.</p>
+          {omittedChanges.length > 0 && <Alert variant="warning" title="Não incluídas neste download">
+            <ul>{omittedChanges.map(change => <li key={change.suggestionId}>
+              {change.proposedText} — {change.blockedReason || 'Nenhum destino selecionado.'}
+            </li>)}</ul>
+          </Alert>}
+          {!ready && <p>Selecione ao menos uma alteração com destino válido para baixar.</p>}
+        </div>
+        <Button variant="primary" onClick={() => run('export')} disabled={!ready || Boolean(busy)} loading={busy === 'export'}
+          aria-describedby="layout-download-reason">
           Baixar DOCX com layout original
         </Button>
       </>}

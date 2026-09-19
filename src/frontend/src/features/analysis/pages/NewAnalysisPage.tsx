@@ -189,7 +189,7 @@ export function NewAnalysisPage() {
         <Button
           variant="primary"
           size="lg"
-          icon="auto_awesome"
+          icon="description"
           onClick={executeAnalysis}
           disabled={isProcessing}
           className={styles.submitBtn}

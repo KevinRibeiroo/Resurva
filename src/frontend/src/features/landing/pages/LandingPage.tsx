@@ -1,7 +1,7 @@
+import { ButtonLink } from '../../../shared/ui/Button/ButtonLink'
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../../app/providers/AuthProvider'
-import { Button } from '../../../shared/ui/Button/Button'
 import { Card } from '../../../shared/ui/Card/Card'
 import { Badge } from '../../../shared/ui/Badge/Badge'
 import { ScoreRing } from '../../../shared/ui/ScoreRing/ScoreRing'
@@ -18,7 +18,7 @@ export function LandingPage() {
         <div className={styles.headerInner}>
           <Link to="/" className={styles.logo}>
             <span className="material-symbols-outlined" style={{ fontSize: '26px', color: 'var(--color-primary)' }}>
-              auto_awesome
+              description
             </span>
             <span className={styles.logoTitle}>Resurva</span>
           </Link>
@@ -33,11 +33,9 @@ export function LandingPage() {
           </nav>
 
           <div className={styles.headerActions}>
-            <Link to={ctaDestination}>
-              <Button variant="primary" size="sm" icon="bolt">
+            <ButtonLink to={ctaDestination} variant="primary" size="sm" icon="arrow_forward">
                 Analisar currículo
-              </Button>
-            </Link>
+              </ButtonLink>
           </div>
         </div>
       </header>
@@ -64,11 +62,9 @@ export function LandingPage() {
             </p>
 
             <div className={styles.heroCtaGroup} id="hero-cta">
-              <Link to={ctaDestination}>
-                <Button variant="primary" size="lg" icon="rocket_launch">
+              <ButtonLink to={ctaDestination} variant="primary" size="lg" icon="arrow_forward">
                   Analisar meu currículo
-                </Button>
-              </Link>
+                </ButtonLink>
             </div>
 
             {/* Prévia Ilustrativa Identificada Claramente */}
@@ -280,11 +276,9 @@ export function LandingPage() {
               <p className="font-body-md" style={{ color: 'var(--color-text-muted)', marginBottom: 'var(--space-lg)', maxWidth: '540px' }}>
                 Entre com sua conta autorizada para realizar uma comparação com evidências reais e sem invenções.
               </p>
-              <Link to={ctaDestination}>
-                <Button variant="primary" size="lg" icon="bolt">
+              <ButtonLink to={ctaDestination} variant="primary" size="lg" icon="arrow_forward">
                   Começar análise agora
-                </Button>
-              </Link>
+                </ButtonLink>
             </div>
           </div>
         </section>

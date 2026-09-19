@@ -1,5 +1,6 @@
+import { ButtonLink } from '../../../shared/ui/Button/ButtonLink'
 import React, { useEffect, useState } from 'react'
-import { useParams, useLocation, useNavigate, Link } from 'react-router-dom'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { getOptimizationPlan } from '../services/optimizationService'
 import {
   normalizeSafetyLevel,
@@ -96,11 +97,9 @@ export function OptimizationConfirmationsPage() {
             {error || 'Plano de otimização não encontrado.'}
           </Alert>
           <div style={{ marginTop: 'var(--space-lg)', display: 'flex', justifyContent: 'center' }}>
-            <Link to="/app/analises/nova">
-              <Button variant="primary" icon="refresh">
+            <ButtonLink to="/app/analises/nova" variant="primary" icon="refresh">
                 Nova Análise
-              </Button>
-            </Link>
+              </ButtonLink>
           </div>
         </Card>
       </div>
