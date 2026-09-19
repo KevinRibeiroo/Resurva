@@ -17,14 +17,14 @@
 
 @media (min-width: 1024px) {
   .pillarsGrid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
 .pillarCard {
   display: flex;
   flex-direction: column;
-  background: var(--color-surface-low);
+  background: var(--color-surface-card);
   box-shadow: var(--shadow-card);
 }
 
@@ -70,7 +70,7 @@
 }
 
 .submitBtn {
-  min-width: 320px;
+  width: min(100%, 360px);
   max-width: 100%;
   box-shadow: var(--shadow-glow-primary);
 }
@@ -80,3 +80,6 @@
   align-items: center;
   gap: 0.375rem;
 }
+
+.pillarHeader, .securityTrustRow { flex-wrap:wrap; gap:12px; }
+.pageHeader { align-items:flex-start; text-align:left; max-width:1160px; margin-inline:auto; }

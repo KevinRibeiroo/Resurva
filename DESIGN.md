@@ -1,19 +1,19 @@
 ---
 version: alpha
 name: Resurva
-description: Interface de comparação factual e adaptação de currículos, preservando o visual atual.
+description: Interface de comparação factual e adaptação de currículos, direção Acervo aprovada em 18/09/2026.
 colors:
-  background: '#0b0d13'
-  surface: '#1a1f2c'
-  text: '#f8fafc'
-  muted: '#94a3b8'
-  primary: '#6366f1'
-  accent: '#4cd7f6'
+  background: '#edf1ec'
+  surface: '#ffffff'
+  text: '#1d332b'
+  muted: '#526559'
+  primary: '#285445'
+  accent: '#dce6bf'
 typography:
   sans:
-    fontFamily: "'Plus Jakarta Sans', 'Segoe UI', sans-serif"
+    fontFamily: "'Public Sans', 'Segoe UI', sans-serif"
   mono:
-    fontFamily: "'JetBrains Mono', monospace"
+    fontFamily: "ui-monospace, Consolas, monospace"
 rounded:
   DEFAULT: '0.5rem'
   lg: '0.75rem'
@@ -22,21 +22,21 @@ spacing:
   section-gap: '2rem'
 ---
 
-# Resurva — contexto visual existente
+# Resurva — Acervo
 
 ## Overview
 
-Produto em português para o candidato comparar evidências e revisar alterações, não um sistema de seleção. A referência é a tela atual de adaptação: documento original e decisões lado a lado, cartões escuros e acentos violeta/ciano. Esta integração não redesenha o produto.
+Produto em português para o candidato comparar evidências e revisar alterações, não um sistema de seleção. Direção aprovada: opção 1 verde da segunda rodada. Masthead verde floresta, fundo verde claro, tipografia editorial e folha branca de evidências. A análise prioriza a conferência de trechos; o score não representa chance de contratação.
 
 Fonte canônica dos valores: `src/frontend/src/shared/styles/tokens.css`; este documento resume o sistema, não gera CSS. Componentes consomem os tokens diretamente. Não introduzir paleta independente por funcionalidade.
 
 ## Colors
 
-Superfícies escuras, texto claro e contraste de hierarquia. Ciano/violeta para ações; alertas compartilhados distinguem erro, aviso e sucesso também por texto e ícone.
+Superfícies claras, texto verde escuro e ações em verde floresta. Alertas compartilhados distinguem erro, aviso e sucesso também por texto e ícone.
 
 ## Typography
 
-Preservar as famílias e classes tipográficas existentes. Textos de currículo quebram linha; nunca truncar a única evidência disponível.
+Newsreader para marca e títulos; Public Sans para interface e evidências. Textos de currículo quebram linha; nunca truncar a única evidência disponível.
 
 ## Layout
 
@@ -54,7 +54,7 @@ Campos usam os raios existentes. Ícones Material Symbols acompanham rótulos, n
 
 Proprietários canônicos: `shared/ui/Button`, `Card`, `Alert`, `Spinner`. Seleção de destino usa select nativo rotulado; seu popup é intencionalmente controlado pelo sistema operacional. Upload usa input de arquivo nativo acessível.
 
-Estados do painel: sem arquivo, arquivo selecionado, inspeção, destinos disponíveis/bloqueados, exportação, erro recuperável e download iniciado. Não afirmar que a revisão visual foi concluída. Desabilitar exportação enquanto houver destino faltando; cancelar requisições obsoletas e preservar o arquivo após erro recuperável.
+Estados do painel: sem arquivo, arquivo selecionado, inspeção, destinos disponíveis/bloqueados, exportação, erro recuperável e download iniciado. Não afirmar que a revisão visual foi concluída. Exportar o subconjunto com destinos válidos: habilitar com ao menos uma alteração selecionada e listar as não incluídas antes do download, com contagem após. Uma alteração sem destino não bloqueia as demais. Cancelar requisições obsoletas e preservar o arquivo após erro recuperável.
 
 Originais permanecem apenas em memória, por sessão/usuário; não usar URLs nem armazenamento persistente do navegador para o conteúdo. A comparação, confirmação e exportação padrão continuam com seus contratos atuais.
 
@@ -63,4 +63,25 @@ Originais permanecem apenas em memória, por sessão/usuário; não usar URLs ne
 - Usar os componentes existentes e erros com orientação de recuperação.
 - Distinguir DOCX baseado no original de PDF/DOCX em modelo padrão.
 - Não prometer mesma paginação: revisão no Word ainda é necessária.
-- Não redesenhar outras telas ou adicionar serviços cloud nesta integração local.
+- Manter identidade Acervo entre landing, login, envio, resultado e adaptação; não adicionar serviços cloud para o redesign.
+
+## Comparação e responsividade
+
+`AnalysisResultView` apresenta o resultado; `EvidenceWorkbench` possui a seleção de requisitos. No desktop, evidências ficam na coluna direita; até 700px aparecem imediatamente abaixo do botão selecionado. Botões nativos mantêm Tab/Enter/Espaço, foco visível e `aria-expanded`. Ausência de evidência é explícita, sem inventar trechos. As cinco dimensões, pontos fortes, pontos de atenção e recomendações permanecem disponíveis.
+
+Não mostrar cargo, nome do arquivo, currículo completo ou pesos fixos: o contrato de análise atual não fornece esses dados. O título genérico substitui o cargo fictício do mockup. Ações de adaptação preservam o fluxo de confirmação e os contratos existentes.
+
+Grades usam colunas com mínimo zero; ações quebram linha e têm alvo mínimo de 44px. Abaixo de 600px, a barra de adaptação fica no fluxo da página para não cobrir o documento. O modo claro é o tema deste redesign. Respeitar movimento reduzido e manter barras de rolagem visíveis.
+
+## Verificação local
+
+A entrada `src/frontend/tests/visual/index.html` renderiza componentes reais com dados inteiramente fictícios, fora do bundle de produção. Com Vite em execução, abrir `/tests/visual/index.html` (resultado) ou `?upload` (envio). Não é um modo visitante nem altera autenticação; não usar dados pessoais nessa prévia.
+
+## Canonical UI Map
+
+| Capability | Canonical owner | Source of truth | Allowed variants | Verification |
+| --- | --- | --- | --- | --- |
+| Select/Listbox | Select nativo do LayoutExportPanel | Modelo de destinos retornado pela API | Popup nativo do sistema | layout-export.test.tsx |
+| Form | ResumeDropzone e JobDescriptionInput | Limites e validação do fluxo de análise | Upload PDF/DOCX e descrição textual | newAnalysis.test.tsx |
+| Scrollbar | shared/styles/reset.css | Tokens globais | Padrão CSS e fallback WebKit | Inspeção visual e DOM |
+| Navigation | ButtonLink e React Router Link | Rotas existentes | Aparência primary, secondary e ghost | landing.test.tsx e testes de fluxo |

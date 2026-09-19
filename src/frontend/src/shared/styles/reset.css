@@ -6,7 +6,9 @@
 
 html {
   font-size: 16px;
-  color-scheme: dark;
+  color-scheme: light;
+  scrollbar-color: var(--color-text-dim) var(--color-surface-lowest);
+  scrollbar-width: thin;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
 }
@@ -19,7 +21,7 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+
   overflow-y: auto;
 }
 

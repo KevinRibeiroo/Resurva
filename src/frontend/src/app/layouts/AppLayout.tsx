@@ -16,9 +16,6 @@ export function AppLayout() {
         <div className={styles.barInner}>
           <div className={styles.brandArea}>
             <Link to="/" className={styles.logoLink} title="Página Inicial">
-              <span className="material-symbols-outlined" style={{ fontSize: '24px', color: 'var(--color-primary)' }}>
-                auto_awesome
-              </span>
               <span className={styles.brandText}>Resurva</span>
             </Link>
 
@@ -29,10 +26,7 @@ export function AppLayout() {
                 to="/app/analises/nova"
                 className={`${styles.navItem} ${isNovaAnalise ? styles.navItemActive : ''}`}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                  add_circle
-                </span>
-                <span>Nova Análise</span>
+                  <span>Nova Análise</span>
               </Link>
             </nav>
           </div>

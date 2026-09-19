@@ -31,17 +31,18 @@ export function Button({
 
   return (
     <button
+      type="button"
       className={rootClass}
       disabled={disabled || loading}
       aria-busy={loading}
       {...props}
     >
       {loading ? (
-        <span className={`material-symbols-outlined ${styles.spinnerIcon}`}>
+        <span aria-hidden="true" className={`material-symbols-outlined ${styles.spinnerIcon}`}>
           progress_activity
         </span>
       ) : icon ? (
-        <span className={`material-symbols-outlined ${styles.btnIcon}`}>
+        <span aria-hidden="true" className={`material-symbols-outlined ${styles.btnIcon}`}>
           {icon}
         </span>
       ) : null}

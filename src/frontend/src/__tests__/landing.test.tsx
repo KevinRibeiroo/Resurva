@@ -49,7 +49,7 @@ describe('LandingPage', () => {
     expect(screen.getByText(/Demonstração Ilustrativa/i)).toBeInTheDocument()
 
     // CTA buttons
-    const ctas = screen.getAllByRole('button', { name: /Analisar meu currículo/i })
+    const ctas = screen.getAllByRole('link', { name: /Analisar meu currículo/i })
     expect(ctas.length).toBeGreaterThanOrEqual(1)
   })
 

@@ -100,9 +100,8 @@
   text-transform: uppercase;
 }
 
-.gradient-text {
-  background: var(--gradient-accent-text);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+.gradient-text { color: var(--color-primary); }
+
+.font-display-hero, .font-headline-lg, .font-headline-md { font-family:var(--font-display); font-weight:500; }
+.font-display-hero { font-size:clamp(2.5rem,5vw,4.5rem); }
+.font-headline-lg { font-size:clamp(2rem,4vw,3rem); }

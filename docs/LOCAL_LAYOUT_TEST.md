@@ -27,12 +27,12 @@ Abra `http://localhost:5173`. API em `http://localhost:5080`, ambiente `Developm
 5. Skills curtas podem entrar na categoria existente; frases completas podem ser acrescentadas ao fim de um resumo/item de experiência compatível. O texto é exatamente o aprovado (ou a declaração confirmada) no plano, sem uma nova chamada à IA.
 6. Clique em **Baixar DOCX com layout original**. Abra no Word e revise linhas/páginas antes de enviar. Os botões **PDF — modelo padrão** e **DOCX — modelo padrão** continuam separados: não preservam layout.
 
-Se uma mudança não tiver destino compatível, a tela mostra o motivo e não gera um documento parcial. Revise o plano ou use conscientemente a exportação padrão; não existe fallback silencioso.
+Cada alteração é independente. Se uma mudança não tiver destino compatível ou ficar sem seleção, ela é listada como não incluída e não impede exportar as demais. Basta selecionar um destino válido para pelo menos uma alteração. O download informa quantas foram incluídas e omitidas; os trechos não selecionados permanecem originais e o plano aprovado não é modificado. Não existe troca silenciosa para o modelo padrão.
 
 ## Contrato HTTP
 
 - `POST /api/optimizations/{id}/layout/inspect`: multipart `file`. Retorno: `version`, `sourceSha256`, `changes` com `suggestionId`, `proposedText`, `kind`, `candidates` (`id`, `text`, `section`), `blockedReason` e `reviewStatus: visual_review_pending`.
-- `POST /api/optimizations/{id}/layout/export`: multipart `file`, `version`, `sourceSha256`, `placements` (JSON de pares `suggestionId`/`blockId`). Retorna DOCX binário com `Cache-Control: no-store`.
+- `POST /api/optimizations/{id}/layout/export`: multipart `file`, `version`, `sourceSha256`, `placements` (JSON de pares `suggestionId`/`blockId`, subconjunto não vazio das alterações aprovadas). Retorna DOCX binário com `Cache-Control: no-store`. IDs desconhecidos, duplicados e destinos incompatíveis continuam sendo recusados. Alterações omitidas não são aplicadas nem removidas do plano.
 - JWT, conta autorizada, ownership, rate limiting e retenção existentes permanecem. Ambos retornam 404 fora de `Development`; o painel só aparece com Vite em desenvolvimento.
 - A API usa apenas decisões/aplicações persistidas e confirmações canônicas. O cliente não pode enviar texto de substituição ou flags de aprovação.
 - Arquivo diferente ou versão/hash obsoletos: 409. DOCX inválido, layout incompatível ou destino inválido: 400. Arquivo/plano indisponível ao usuário: 404. Ausência de login: 401.

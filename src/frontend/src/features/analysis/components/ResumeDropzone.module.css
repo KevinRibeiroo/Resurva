@@ -19,19 +19,19 @@
   min-height: 220px;
   border-radius: var(--radius-xl);
   border: 1.5px dashed var(--color-border-light);
-  background: rgba(18, 22, 32, 0.45);
+  background: var(--color-surface-card);
   cursor: pointer;
   transition: all 0.25s ease;
 }
 
 .dropzone:hover:not(.disabled) {
   border-color: var(--color-primary-container);
-  background: rgba(26, 31, 44, 0.6);
+  background: var(--color-surface-card);
 }
 
 .dragOver {
   border-color: var(--color-primary);
-  background: rgba(99, 102, 241, 0.12);
+  background: var(--color-evidence);
   transform: scale(1.01);
 }
 
@@ -90,7 +90,7 @@
   width: 48px;
   height: 48px;
   border-radius: var(--radius-lg);
-  background: rgba(99, 102, 241, 0.12);
+  background: var(--color-evidence);
   display: flex;
   align-items: center;
   justify-content: center;
