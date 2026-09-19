@@ -1,5 +1,6 @@
+import { ButtonLink } from '../../../shared/ui/Button/ButtonLink'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { useParams, useLocation, useNavigate, Link } from 'react-router-dom'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { getOptimizationPlan, applyOptimization, exportAdaptedResume } from '../services/optimizationService'
 import {
   normalizeSafetyLevel,
@@ -121,7 +122,9 @@ export function OptimizationAdaptationPage() {
   useLayoutEffect(() => {
     const dock = dockRef.current
     if (!dock) return
-    const measure = () => setDockHeight(dock.getBoundingClientRect().height)
+    const measure = () => setDockHeight(
+      getComputedStyle(dock).position === 'fixed' ? dock.getBoundingClientRect().height : 0
+    )
     measure()
     const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null
     observer?.observe(dock)
@@ -231,11 +234,9 @@ export function OptimizationAdaptationPage() {
             {error}
           </Alert>
           <div style={{ marginTop: 'var(--space-lg)', display: 'flex', justifyContent: 'center' }}>
-            <Link to="/app/analises/nova">
-              <Button variant="primary" icon="refresh">
+            <ButtonLink to="/app/analises/nova" variant="primary" icon="refresh">
                 Nova Análise
-              </Button>
-            </Link>
+              </ButtonLink>
           </div>
         </Card>
       </div>
@@ -568,11 +569,9 @@ export function OptimizationAdaptationPage() {
         <div className={styles.dockButtonsCol}>
           {displayedAdaptedText ? (
             <>
-              <Link to="/app/analises/nova">
-                <Button variant="ghost" icon="add" title="Iniciar uma nova análise de currículo">
+              <ButtonLink to="/app/analises/nova" variant="ghost" icon="add" title="Iniciar uma nova análise de currículo">
                   Nova Análise
-                </Button>
-              </Link>
+                </ButtonLink>
 
               <Button
                 variant="secondary"
@@ -626,11 +625,9 @@ export function OptimizationAdaptationPage() {
             </>
           ) : (
             <>
-              <Link to={`/app/adaptacoes/${plan!.id}/confirmacoes`}>
-                <Button variant="ghost" icon="checklist">
+              <ButtonLink to={`/app/adaptacoes/${plan!.id}/confirmacoes`} variant="ghost" icon="checklist">
                   Revisar confirmações éticas
-                </Button>
-              </Link>
+                </ButtonLink>
               <Button
                 variant="primary"
                 icon="check_circle"

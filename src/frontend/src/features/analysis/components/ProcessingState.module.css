@@ -61,13 +61,13 @@
 }
 
 .stepCompleted {
-  border-color: rgba(16, 185, 129, 0.25);
-  background: rgba(16, 185, 129, 0.04);
+  border-color: var(--color-emerald-bg);
+  background: var(--color-emerald-bg);
 }
 
 .stepActive {
-  border-color: rgba(99, 102, 241, 0.35);
-  background: rgba(99, 102, 241, 0.06);
+  border-color: var(--color-evidence);
+  background: var(--color-evidence);
 }
 
 .stepIconBox {
@@ -87,7 +87,7 @@
 }
 
 .stepActive .stepIconBox {
-  background: rgba(99, 102, 241, 0.15);
+  background: var(--color-evidence);
 }
 
 .stepContent {
@@ -124,7 +124,7 @@
 }
 
 .stepActive .stepStatusBadge {
-  background: rgba(99, 102, 241, 0.15);
+  background: var(--color-evidence);
   color: var(--color-primary);
 }
 

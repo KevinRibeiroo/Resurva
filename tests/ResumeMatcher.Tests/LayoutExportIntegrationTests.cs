@@ -14,6 +14,62 @@ namespace ResumeMatcher.Tests;
 public sealed class LayoutExportIntegrationTests
 {
     [Theory]
+    [InlineData("empty")]
+    [InlineData("duplicate")]
+    [InlineData("unknown")]
+    public async Task Partial_Export_Rejects_Invalid_Selection(string kind)
+    {
+        await using var factory = new ResumeMatcherApiFactory("Development");
+        var (id, suggestionId, source) = await Seed(factory);
+        using var client = factory.CreateAuthenticatedClient();
+        using var form = Form(source);
+        form.Add(new StringContent(Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(source))), "sourceSha256");
+        form.Add(new StringContent("2"), "version");
+        var selected = new LayoutPlacementModel(suggestionId, "p:3");
+        LayoutPlacementModel[] placements = kind switch {
+            "empty" => [],
+            "duplicate" => [selected, selected],
+            _ => [selected, new(Guid.NewGuid(), "p:3")]
+        };
+        form.Add(new StringContent(JsonSerializer.Serialize(placements, new JsonSerializerOptions(JsonSerializerDefaults.Web))), "placements");
+        using var response = await client.PostAsync($"/api/optimizations/{id}/layout/export", form);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Selected_Change_Is_Exported_Without_Unplaceable_Change()
+    {
+        await using var factory = new ResumeMatcherApiFactory("Development");
+        var (id, selectedId, source) = await Seed(factory);
+        var blockedId = Guid.NewGuid();
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ResumeMatcherDbContext>();
+            var entity = db.Optimizations.Single(p => p.Id == id);
+            entity.DecisionsJson = JsonSerializer.Serialize(new {
+                decisions = new[] { new OptimizationDecisionModel(selectedId, true), new OptimizationDecisionModel(blockedId, true) },
+                appliedItems = new[] {
+                    new AppliedOptimizationItemModel(selectedId, OptimizationSafetyLevel.Safe, "API em C#", "APIs em C#", "Sintético", false, "CurriculoOriginal"),
+                    new AppliedOptimizationItemModel(blockedId, OptimizationSafetyLevel.Safe, "Trecho inexistente", "Título sintético", "Sintético", false, "CurriculoOriginal") }
+            }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            await db.SaveChangesAsync();
+        }
+        using var client = factory.CreateAuthenticatedClient();
+        using var inspection = await client.PostAsync($"/api/optimizations/{id}/layout/inspect", Form(source));
+        var snapshot = await inspection.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Empty(snapshot.GetProperty("changes")[1].GetProperty("candidates").EnumerateArray());
+        using var export = await client.PostAsync($"/api/optimizations/{id}/layout/export",
+            ExportForm(source, snapshot.GetProperty("sourceSha256").GetString()!, 2, selectedId, "p:3"));
+        Assert.Equal(HttpStatusCode.OK, export.StatusCode);
+        using var output = WordprocessingDocument.Open(new MemoryStream(await export.Content.ReadAsByteArrayAsync()), false);
+        Assert.Contains("APIs em C#", output.MainDocumentPart!.Document!.InnerText);
+        Assert.DoesNotContain("Título sintético", output.MainDocumentPart.Document.InnerText);
+        using var before = WordprocessingDocument.Open(new MemoryStream(source), false);
+        Assert.Equal(before.MainDocumentPart!.Document!.Body!.Elements<Paragraph>().Where((_, index) => index != 3).Select(p => p.OuterXml),
+            output.MainDocumentPart.Document.Body!.Elements<Paragraph>().Where((_, index) => index != 3).Select(p => p.OuterXml));
+    }
+
+    [Theory]
     [InlineData("Software Engineer | .NET | React")]
     [InlineData("Engenheiro de Software | .NET | React")]
     public async Task Approved_Professional_Title_Is_Exported_With_Original_Formatting(string title)

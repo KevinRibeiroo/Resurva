@@ -5,10 +5,12 @@
   gap: var(--space-xs);
   font-family: var(--font-sans);
   font-weight: 600;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   text-decoration: none;
-  white-space: nowrap;
+  white-space: normal;
+  min-height:44px;
+  max-width:100%;
   user-select: none;
   cursor: pointer;
   border: 1px solid transparent;
@@ -28,7 +30,7 @@
 .lg {
   padding: 0.875rem 1.75rem;
   font-size: 1.0625rem;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-sm);
 }
 
 /* Variants */
@@ -42,11 +44,11 @@
 .primary:hover:not(:disabled) {
   background: var(--gradient-cta-hover);
   box-shadow: var(--shadow-glow-hover);
-  transform: translateY(-1px) scale(1.01);
+
 }
 
 .primary:active:not(:disabled) {
-  transform: translateY(0) scale(0.99);
+
 }
 
 .secondary {
@@ -58,7 +60,7 @@
 .secondary:hover:not(:disabled) {
   background: var(--color-surface-hover);
   border-color: var(--color-primary-container);
-  color: #ffffff;
+  color: var(--color-text-high);
 }
 
 .ghost {

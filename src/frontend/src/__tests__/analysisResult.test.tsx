@@ -69,7 +69,7 @@ describe('AnalysisResultPage', () => {
 
     // Wait for analysis to load
     await waitFor(() => {
-      expect(screen.getByText('Resultado da Análise de Aderência')).toBeInTheDocument()
+      expect(screen.getByText('Seu currículo e a vaga')).toBeInTheDocument()
     })
 
     // Overall score 82 and compatibility label
@@ -105,7 +105,7 @@ describe('AnalysisResultPage', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText('C# / .NET')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /C# \/ \.NET/i })).toBeInTheDocument()
     })
 
     // Strengths evidence is rendered directly

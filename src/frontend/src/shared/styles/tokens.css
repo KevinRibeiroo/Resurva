@@ -1,50 +1,58 @@
 :root {
+  --font-display: 'Newsreader', Georgia, serif;
+  --color-evidence: #dce6bf;
+  --color-masthead: #1d332b;
+  --color-border: var(--color-border-light);
+  --color-surface-tier0: var(--color-bg);
+  --color-surface-tier1: var(--color-surface-card);
+  --duration-fast: 160ms;
+  --ease-standard: ease;
   /* Surface Architecture */
-  --color-bg: #0b0d13;
-  --color-surface: #111319;
-  --color-surface-dim: #111319;
-  --color-surface-bright: #373940;
-  --color-surface-lowest: #0c0e14;
-  --color-surface-low: #121620;
-  --color-surface-card: #1a1f2c;
-  --color-surface-hover: #242b3d;
-  --color-surface-high: #282a30;
-  --color-surface-highest: #33343b;
+  --color-bg: #edf1ec;
+  --color-surface: #f7f9f5;
+  --color-surface-dim: #e6ece4;
+  --color-surface-bright: #ffffff;
+  --color-surface-lowest: #f7f9f5;
+  --color-surface-low: #e6ece4;
+  --color-surface-card: #ffffff;
+  --color-surface-hover: #dfe8dc;
+  --color-surface-high: #e2e9df;
+  --color-surface-highest: #d6e1d1;
 
   /* Typography & Neutrals */
-  --color-text-high: #f8fafc;
-  --color-text-body: #e2e8f0;
-  --color-text-muted: #94a3b8;
-  --color-text-dim: #64748b;
-  --color-border-hairline: rgba(148, 163, 184, 0.14);
-  --color-border-light: rgba(148, 163, 184, 0.24);
-  --color-border-focus: #6366f1;
+  --color-text-high: #1d332b;
+  --color-text-body: #30483d;
+  --color-text-muted: #526559;
+  --color-text-dim: #586b60;
+  --color-border-hairline: #d2dcd1;
+  --color-border-light: #bccbbb;
+  --color-border-focus: #285445;
 
   /* Energy Accents & Primaries */
-  --color-primary: #c0c1ff;
-  --color-primary-container: #6366f1;
-  --color-on-primary: #1000a9;
-  --color-secondary: #d0bcff;
-  --color-secondary-container: #8b5cf6;
-  --color-tertiary: #4cd7f6;
-  --color-tertiary-container: #009eb9;
+  --color-primary: #285445;
+  --color-primary-container: #285445;
+  --color-on-primary: #ffffff;
+  --color-secondary: #385d42;
+  --color-secondary-container: #dce6bf;
+  --color-tertiary: #35634e;
+  --color-tertiary-container: #dce6bf;
 
   /* Semantic Telemetry */
-  --color-emerald: #10b981;
-  --color-emerald-bg: rgba(16, 185, 129, 0.12);
-  --color-emerald-border: rgba(16, 185, 129, 0.28);
-  --color-amber: #f59e0b;
-  --color-amber-bg: rgba(245, 158, 11, 0.12);
-  --color-amber-border: rgba(245, 158, 11, 0.28);
-  --color-crimson: #ef4444;
-  --color-crimson-bg: rgba(239, 68, 68, 0.12);
-  --color-crimson-border: rgba(239, 68, 68, 0.28);
+  --color-emerald: #285445;
+  --color-emerald-bg: #e5eddf;
+  --color-emerald-border: #bdcfb5;
+  --color-amber: #80520d;
+  --color-amber-bg: #faf0d8;
+  --color-amber-border: #d9bd86;
+  --color-crimson: #a32f36;
+  --color-crimson-bg: #fbe9e8;
+  --color-crimson-border: #dfb1b2;
 
   /* Gradients */
-  --gradient-cta: linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #38bdf8 100%);
-  --gradient-cta-hover: linear-gradient(135deg, #9d74f8 0%, #7578f7 50%, #56c8f9 100%);
-  --gradient-accent-text: linear-gradient(90deg, #c0c1ff 0%, #d0bcff 50%, #4cd7f6 100%);
-  --gradient-surface: linear-gradient(180deg, rgba(30, 31, 38, 0.85) 0%, rgba(18, 22, 32, 0.85) 100%);
+  --gradient-cta: #285445;
+  --gradient-cta-hover: #1d4034;
+  --gradient-accent-text: #285445;
+  --gradient-surface: #ffffff;
 
   /* Spacing */
   --space-2xs: 0.25rem;  /* 4px */
@@ -61,20 +69,20 @@
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.75rem;
   --radius-full: 9999px;
 
   /* Shadows & Glows */
-  --shadow-card: 0 8px 24px -4px rgba(0, 0, 0, 0.45);
-  --shadow-modal: 0 20px 48px -8px rgba(0, 0, 0, 0.7);
-  --shadow-glow-primary: 0 0 24px rgba(99, 102, 241, 0.35);
-  --shadow-glow-hover: 0 0 32px rgba(99, 102, 241, 0.55);
+  --shadow-card: 0 4px 16px #1d332b08;
+  --shadow-modal: 0 12px 36px #1d332b12;
+  --shadow-glow-primary: none;
+  --shadow-glow-hover: none;
 
   /* Layout Boundaries */
   --container-max-width: 1360px;
 
   /* Font Families */
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Public Sans', 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, Consolas, monospace;
 }

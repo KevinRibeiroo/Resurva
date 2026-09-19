@@ -36,17 +36,14 @@
   }
 }
 
-/* Cosmic Ambient Glow Utility */
-.ambient-glow {
-  position: absolute;
-  border-radius: var(--radius-full);
-  pointer-events: none;
-  filter: blur(100px);
-  z-index: 0;
-}
+.ambient-glow { display:none; }
 
 /* Safe word break for arbitrary input & filenames */
 .break-anywhere {
   overflow-wrap: anywhere;
   word-break: break-word;
 }
+
+input, textarea, select { font-size: 1rem; }
+button, a, input, textarea, select, summary { touch-action: manipulation; }
+:focus-visible { outline: 3px solid var(--color-border-focus); outline-offset: 3px; }

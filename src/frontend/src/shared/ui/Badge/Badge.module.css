@@ -6,7 +6,8 @@
   font-weight: 600;
   border-radius: var(--radius-full);
   border: 1px solid transparent;
-  white-space: nowrap;
+  white-space:normal;
+  max-width:100%;
   line-height: 1.2;
 }
 
@@ -57,15 +58,15 @@
 }
 
 .primary {
-  background: rgba(99, 102, 241, 0.12);
+  background: var(--color-evidence);
   color: var(--color-primary);
-  border-color: rgba(99, 102, 241, 0.28);
+  border-color: var(--color-evidence);
 }
 
 .secondary {
-  background: rgba(139, 92, 246, 0.15);
+  background: var(--color-evidence);
   color: var(--color-secondary);
-  border-color: rgba(139, 92, 246, 0.3);
+  border-color: var(--color-evidence);
 }
 
 .neutral {

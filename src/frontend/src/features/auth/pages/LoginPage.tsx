@@ -36,7 +36,7 @@ export function LoginPage() {
         <div className={styles.brandHeader}>
           <div className={styles.logoBadge}>
             <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--color-primary)' }}>
-              auto_awesome
+              description
             </span>
           </div>
           <h1 className="font-headline-lg" style={{ color: 'var(--color-text-high)', marginBottom: '0.25rem' }}>
