@@ -16,3 +16,23 @@ package-lock.json
 firebase-debug.log*
 src/frontend/.env.local
 src/frontend/.env.*.local
+
+# Local credentials and private exports. Keep only reviewed public examples.
+.env
+.env.*
+!.env.example
+!src/frontend/.env.production
+secrets.json
+appsettings.Local.json
+appsettings.*.local.json
+*service-account*.json
+*serviceAccount*.json
+*-firebase-adminsdk-*.json
+*.pem
+*.key
+*.pfx
+*.p12
+*.dump
+*.backup
+*.bundle
+private-data/
